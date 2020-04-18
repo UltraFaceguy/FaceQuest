@@ -1,5 +1,6 @@
 package com.questworld.util;
 
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
@@ -15,8 +16,6 @@ import com.questworld.api.Translation;
 import com.questworld.api.annotation.Nullable;
 
 public final class Text {
-	private Text() {
-	}
 
 	// TODO: Probably make all of this better and then comment
 	public final static char dummyChar = '&';
@@ -162,9 +161,9 @@ public final class Text {
 		return QuestWorld.translate(Translation.TIME_FMT, String.valueOf(hours), String.valueOf(minutes));
 	}
 
-	private static final String[] progress_colors = { "&4", "&c", "&6", "&e", "&2", "&a" };
+	private static final String[] progress_colors = { "&e", "&e", "&e", "&e", "&e", "&2" };
 
-	private static final String progress_bar = "::::::::::::::::::::";
+	private static final String progress_bar = "▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌";
 
 	public static String progressBar(int current, int total, @Nullable("defaults to xy%") String append) {
 		if (total <= 0) {
@@ -173,25 +172,15 @@ public final class Text {
 		}
 		current = Math.max(Math.min(current, total), 0);
 
-		int length = (current * 20) / total;
-		if (append == null)
-			append = ((current * 100) / total) + "%";
+		int barSize = progress_bar.length();
+		int length = (current * barSize) / total;
 
-		return colorize(progress_colors[(current * 5) / total], progress_bar.substring(20 - length), "&7",
-				progress_bar.substring(length), " - ", append);
+		return colorize(progress_colors[(current * 5) / total],
+				progress_bar.substring(barSize - length), "&8", progress_bar.substring(length));
 	}
 
 	public static String itemName(ItemStack stack) {
-		if (stack.hasItemMeta() && stack.getItemMeta().hasDisplayName())
-			return stack.getItemMeta().getDisplayName();
-
-		try {
-			return Reflect.nmsGetItemName(stack);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			return niceName(stack.getType().toString());
-		}
+		return ItemStackExtensionsKt.getDisplayName(stack);
 	}
 
 	/**

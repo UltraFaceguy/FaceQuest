@@ -49,6 +49,12 @@ class QuestState extends Quest {
 	}
 
 	@Override
+	public void setRewardsLore(String rewardsLore) {
+		super.setRewardsLore(rewardsLore);
+		changeBits |= BitFlag.getBits(Member.REWARDS_LORE);
+	}
+
+	@Override
 	public void addMission(int index) {
 		super.addMission(index);
 		changeBits |= BitFlag.getBits(Member.TASKS);
@@ -58,12 +64,6 @@ class QuestState extends Quest {
 	public void removeMission(IMission mission) {
 		super.removeMission(mission);
 		changeBits |= BitFlag.getBits(Member.TASKS);
-	}
-
-	@Override
-	public void setPartySize(int size) {
-		super.setPartySize(size);
-		changeBits |= BitFlag.getBits(Member.PARTYSIZE);
 	}
 
 	@Override
@@ -85,9 +85,27 @@ class QuestState extends Quest {
 	}
 
 	@Override
-	public void setXP(int xp) {
+	public void setXP(double xp) {
 		super.setXP(xp);
 		changeBits |= BitFlag.getBits(Member.XP);
+	}
+
+	@Override
+	public void setWeight(int weight) {
+		super.setWeight(weight);
+		changeBits |= BitFlag.getBits(Member.WEIGHT);
+	}
+
+	@Override
+	public void setLevelRequirement(int levelRequirement) {
+		super.setLevelRequirement(levelRequirement);
+		changeBits |= BitFlag.getBits(Member.LEVEL);
+	}
+
+	@Override
+	public void setQuestPoints(int questPoints) {
+		super.setQuestPoints(questPoints);
+		changeBits |= BitFlag.getBits(Member.QUEST_POINTS);
 	}
 
 	@Override
@@ -124,12 +142,6 @@ class QuestState extends Quest {
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
 		changeBits |= BitFlag.getBits(Member.ENABLED);
-	}
-
-	@Override
-	public void setPartySupport(boolean supportsParties) {
-		super.setPartySupport(supportsParties);
-		changeBits |= BitFlag.getBits(Member.DISABLEPARTIES);
 	}
 
 	@Override

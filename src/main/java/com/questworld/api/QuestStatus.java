@@ -22,14 +22,9 @@ public enum QuestStatus {
 	LOCKED_WORLD,
 
 	/**
-	 * The player is part of a Party, but the quest forbids parties.
+	 * The player's level is too low for this quest
 	 */
-	LOCKED_NO_PARTY,
-
-	/**
-	 * The player is not part of a party or the players party is too small.
-	 */
-	LOCKED_PARTY_SIZE,
+	LOCKED_LEVEL,
 
 	/**
 	 * The quest is able to be completed. It may have been previously completed, in

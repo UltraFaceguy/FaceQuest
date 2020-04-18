@@ -8,6 +8,7 @@ import com.questworld.util.BitFlag.BitString;
 
 @NoImpl
 public interface IQuestState extends IQuest {
+
 	void setItemRewards(Player p);
 
 	void setItem(ItemStack item);
@@ -16,11 +17,11 @@ public interface IQuestState extends IQuest {
 
 	void setName(String name);
 
+	void setRewardsLore(String rewardsLore);
+
 	void addMission(int id);
 
 	void removeMission(IMission mission);
-
-	void setPartySize(int size);
 
 	void setRawCooldown(long cooldown);
 
@@ -28,7 +29,13 @@ public interface IQuestState extends IQuest {
 
 	void setMoney(int money);
 
-	void setXP(int xp);
+	void setXP(double xp);
+
+	void setWeight(int weight);
+
+	void setLevelRequirement(int levelRequirement);
+
+	void setQuestPoints(int questPoints);
 
 	void setEnabled(boolean enabled);
 
@@ -41,8 +48,6 @@ public interface IQuestState extends IQuest {
 	void addCommand(int index, String command);
 
 	void setPermission(String permission);
-
-	void setPartySupport(boolean supportsParties);
 
 	void setOrdered(boolean ordered);
 
@@ -75,6 +80,10 @@ public interface IQuestState extends IQuest {
 		AUTOCLAIM,
 		PARENT,
 		PERMISSION,
+		WEIGHT,
+		LEVEL,
+		QUEST_POINTS,
+		REWARDS_LORE
 	}
 
 	boolean hasChange(Member field);

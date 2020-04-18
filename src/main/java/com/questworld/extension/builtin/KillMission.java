@@ -54,6 +54,7 @@ public class KillMission extends MissionType implements Listener, Decaying {
 	protected void layoutMenu(IMissionState changes) {
 		putButton(10, MissionButton.entity(changes));
 		putButton(11, MissionButton.spawnersAllowed(changes));
+		putButton(16, MissionButton.partySupport(changes));
 		putButton(17, MissionButton.amount(changes));
 	}
 }

@@ -16,16 +16,13 @@ import com.questworld.api.QuestWorld;
 import com.questworld.api.Translator;
 import com.questworld.api.contract.ICategory;
 import com.questworld.api.contract.IMission;
-import com.questworld.api.contract.IParty;
 import com.questworld.api.contract.MissionEntry;
 import com.questworld.api.contract.QuestingAPI;
 import com.questworld.api.menu.Menu;
 import com.questworld.extension.builtin.Builtin;
 import com.questworld.listener.ExtensionInstaller;
 import com.questworld.manager.MissionSet;
-import com.questworld.manager.Party;
 import com.questworld.manager.PlayerStatus;
-import com.questworld.manager.ProgressTracker;
 import com.questworld.quest.Facade;
 import com.questworld.util.BukkitService;
 import com.questworld.util.Lang;
@@ -36,8 +33,8 @@ import com.questworld.util.Sounds;
 import net.milkbowl.vault.economy.Economy;
 
 public final class QuestingImpl implements QuestingAPI {
+
 	private final Facade facade = new Facade();
-	private final Map<UUID, Party> parties = new HashMap<>();
 	private final Map<UUID, PlayerStatus> statuses = new HashMap<>();
 	private final Map<String, MissionType> types = new HashMap<>();
 
@@ -200,48 +197,6 @@ public final class QuestingImpl implements QuestingAPI {
 		result = new PlayerStatus(uuid);
 		statuses.put(uuid, result);
 		return result;
-	}
-
-	public Party getParty(OfflinePlayer player) {
-		return getParty(player.getUniqueId());
-	}
-
-	public Party getParty(UUID uuid) {
-		ProgressTracker tracker = getPlayerStatus(uuid).getTracker();
-		UUID leader = tracker.getPartyLeader();
-
-		if (leader != null) {
-			Party p = parties.get(leader);
-			if (p == null)
-				p = createParty(leader);
-
-			if (p.getGroupUUIDs().contains(uuid))
-				return p;
-
-			// Party did not contain the player, something unusual must have happened
-			tracker.setPartyLeader(null);
-		}
-
-		return null;
-	}
-
-	@Override
-	public void disbandParty(IParty party) {
-		Party rawParty = (Party) party;
-		parties.remove(rawParty.getLeaderUUID());
-		rawParty.disband();
-	}
-
-	@Override
-	public Party createParty(OfflinePlayer player) {
-		return createParty(player.getUniqueId());
-	}
-
-	@Override
-	public Party createParty(UUID uuid) {
-		Party p = new Party(uuid);
-		parties.put(uuid, p);
-		return p;
 	}
 
 	@Override

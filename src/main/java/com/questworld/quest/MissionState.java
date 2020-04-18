@@ -94,6 +94,24 @@ class MissionState extends Mission {
 	}
 
 	@Override
+	public void setPartySupport(boolean partySupport) {
+		super.setPartySupport(partySupport);
+		changeBits |= BitFlag.getBits(Member.PARTY_SHARE);
+	}
+
+	@Override
+	public void setActionBarUpdates(boolean actionBarUpdates) {
+		super.setActionBarUpdates(actionBarUpdates);
+		changeBits |= BitFlag.getBits(Member.ACTION_BAR);
+	}
+
+	@Override
+	public void setWaypointerId(String waypointerId) {
+		super.setWaypointerId(waypointerId);
+		changeBits |= BitFlag.getBits(Member.WAYPOINTER);
+	}
+
+	@Override
 	public void setType(MissionType type) {
 		super.setType(type);
 		changeBits |= BitFlag.getBits(Member.TYPE);

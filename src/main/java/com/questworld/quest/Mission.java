@@ -23,6 +23,7 @@ import com.questworld.util.Log;
 import com.questworld.util.Text;
 
 class Mission extends UniqueObject implements IMissionState {
+
 	private WeakReference<Quest> quest;
 	private int amount = 1;
 	private int customInt = 0;
@@ -36,6 +37,9 @@ class Mission extends UniqueObject implements IMissionState {
 	private int index = -1;
 	private Location location = Bukkit.getWorlds().get(0).getSpawnLocation();
 	private boolean spawnerSupport = true;
+	private boolean partySupport = false;
+	private boolean actionBarUpdates = false;
+	private String waypointerId = "";
 	private int timeframe = 0;
 	private MissionType type = QuestWorld.getMissionType("SUBMIT");
 
@@ -130,6 +134,21 @@ class Mission extends UniqueObject implements IMissionState {
 	}
 
 	@Override
+	public boolean getPartySupport() {
+		return partySupport;
+	}
+
+	@Override
+	public boolean getActionBarUpdates() {
+		return actionBarUpdates;
+	}
+
+	@Override
+	public String getWaypointerId() {
+		return waypointerId;
+	}
+
+	@Override
 	public MissionType getType() {
 		return type;
 	}
@@ -175,6 +194,9 @@ class Mission extends UniqueObject implements IMissionState {
 		result.put("lore", Text.escapeColor(description));
 		result.put("custom_int", customInt);
 		result.put("exclude-spawners", !spawnerSupport);
+		result.put("allow-parties", partySupport);
+		result.put("action-bar-updates", actionBarUpdates);
+		result.put("waypointer-id", waypointerId);
 
 		result.put("questId", getQuest().getUniqueId().toString());
 
@@ -255,6 +277,21 @@ class Mission extends UniqueObject implements IMissionState {
 	}
 
 	@Override
+	public void setPartySupport(boolean partySupport) {
+		this.partySupport = partySupport;
+	}
+
+	@Override
+	public void setActionBarUpdates(boolean actionBarUpdates) {
+		this.actionBarUpdates = actionBarUpdates;
+	}
+
+	@Override
+	public void setWaypointerId(String waypointerId) {
+		this.waypointerId = waypointerId;
+	}
+
+	@Override
 	public boolean apply() {
 		return true;
 	}
@@ -297,6 +334,9 @@ class Mission extends UniqueObject implements IMissionState {
 		timeframe = source.timeframe;
 		type = source.type;
 		missingWorldName = source.missingWorldName;
+		actionBarUpdates = source.actionBarUpdates;
+		partySupport = source.partySupport;
+		waypointerId = source.waypointerId;
 	}
 
 	protected void copyTo(Mission dest) {
@@ -309,7 +349,7 @@ class Mission extends UniqueObject implements IMissionState {
 
 	private int fromMaybeString(Object o) {
 		if (o instanceof Integer)
-			return ((Integer) o).intValue();
+			return (Integer) o;
 		if (o instanceof String)
 			return Integer.parseInt((String) o);
 
@@ -349,6 +389,9 @@ class Mission extends UniqueObject implements IMissionState {
 		customInt = (Integer) data.getOrDefault("citizen", customInt);
 		customInt = (Integer) data.getOrDefault("custom_int", customInt);
 		spawnerSupport = !(Boolean) data.getOrDefault("exclude-spawners", !spawnerSupport);
+		partySupport = (Boolean) data.getOrDefault("allow-parties", partySupport);
+		actionBarUpdates = (Boolean) data.getOrDefault("action-bar-updates", actionBarUpdates);
+		waypointerId = (String) data.getOrDefault("waypointer-id", waypointerId);
 	}
 
 	private Location locationHelper(Map<String, Object> data) {

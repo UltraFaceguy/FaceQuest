@@ -38,7 +38,7 @@ public class MineMission extends MissionType implements Listener, Decaying {
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onMine(BlockBreakEvent e) {
 		for (MissionEntry r : QuestWorld.getMissionEntries(this, e.getPlayer())) {
-			if (ItemBuilder.compareItems(PlayerTools.getStackOf(e.getBlock()), r.getMission().getItem()))
+			if (ItemBuilder.compareItems(new ItemStack(e.getBlock().getType()), r.getMission().getItem()))
 				r.addProgress(1);
 		}
 	}
@@ -60,7 +60,7 @@ public class MineMission extends MissionType implements Listener, Decaying {
 					MissionButton.apply(event, changes);
 				}
 		));
-		
+		putButton(16, MissionButton.partySupport(changes));
 		putButton(17, MissionButton.amount(changes));
 	}
 }

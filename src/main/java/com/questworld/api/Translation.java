@@ -39,6 +39,8 @@ public enum Translation implements Translator {
 	QUEST_DELETED("editor.quest.deleted", "name"),
 	QUEST_NAME_EDIT("editor.quest.name-change", "name"),
 	QUEST_NAME_SET("editor.quest.name-set", "name", "name_old"),
+	QUEST_REWARD_DESC("editor.quest.reward-desc", "name", "name_old"),
+	QUEST_REWARD_DESC_SET("editor.quest.reward-desc-set", "name", "name_old"),
 	QUEST_PERM_EDIT("editor.quest.perm-change", "name", "perm"),
 	QUEST_PERM_SET("editor.quest.perm-set", "name", "perm", "perm_old"),
 
@@ -58,29 +60,6 @@ public enum Translation implements Translator {
 	LOCMISSION_NAME_EDIT("editor.rename-location"),
 	LOCMISSION_NAME_SET("editor.renamed-location"),
 
-	// New party translations
-	PARTY_ACCEPT_TEXT("party.display.accept.text"),
-	PARTY_ACCEPT_HOVER("party.display.accept.hover"),
-	PARTY_DENY_TEXT("party.display.reject.text"),
-	PARTY_DENY_HOVER("party.display.reject.hover"),
-	
-	PARTY_ERROR_FULL("party.error.full", "max"),
-	PARTY_ERROR_MEMBER("party.error.member", "name"),
-	PARTY_ERROR_OFFLINE("party.error.offline", "name"),
-
-	PARTY_GROUP_ABANDON("party.group.abandon", "name"),
-	PARTY_GROUP_DISBAND("party.group.disband"),
-	PARTY_GROUP_JOIN("party.group.join", "name"),
-	PARTY_GROUP_KICK("party.group.kick", "name"),
-
-	PARTY_LEADER_INVITED("party.leader.invite-sent", "name"),
-	PARTY_LEADER_PICKNAME("party.leader.pick-player"),
-
-	PARTY_PLAYER_ABANDON("party.player.abandon", "leader"),
-	PARTY_PLAYER_INVITED("party.player.invited", "leader"),
-	PARTY_PLAYER_JOINED("party.player.joined", "leader"),
-	PARTY_PLAYER_KICKED("party.player.kicked", "leader"),
-
 	NOTIFY_COMPLETED("notifications.task-completed", "quest", "task"),
 	NOTIFY_PROGRESS("notifications.task-progress", "quest", "task"),
 	NOTIFY_TIME_FAIL("notifications.task-failed-timeframe", "quest", "task", "ratio"),
@@ -89,9 +68,7 @@ public enum Translation implements Translator {
 	LOCKED_PARENT("quests.locked-parent", "name"),
 	LOCKED_NO_PERM("quests.locked-no-perm", "node", "desc"),
 	LOCKED_WORLD("quests.locked-in-world", "world"),
-	LOCKED_NO_PARTY("quests.locked-no-party"),
-	LOCKED_SMALL_PARTY("quests.locked-small-party", "size"),
-	LOCKED_LARGE_PARTY("quests.locked-large-party", "size"),
+	LOCKED_LEVEL("quests.locked-low-level"),
 
 	// TODO This is hacky, look again when less tired
 	gui_title,

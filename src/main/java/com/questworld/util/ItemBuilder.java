@@ -1,5 +1,6 @@
 package com.questworld.util;
 
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import com.questworld.api.QuestWorld;
 import com.questworld.api.Translation;
 import com.questworld.api.annotation.Mutable;
+import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.SpawnEggMeta;
 
 /**
  * This class provides a builder for ItemStacks. It is exactly what you expect,
@@ -187,8 +190,7 @@ public class ItemBuilder {
 	 * @return this, for chaining
 	 */
 	public @Mutable ItemBuilder damage(int damage) {
-		Reflect.getAdapter().setItemDamage(resultStack, damage);
-		
+		resultStack.setDurability((short) damage);
 		return this;
 	}
 
@@ -206,15 +208,16 @@ public class ItemBuilder {
 
 	/**
 	 * Sets the skull type to a players head, given that the current material
-	 * accepts skull types. <tt>playerName</tt> must not be null. If you want a
-	 * plain player skull, use {@link ItemBuilder#skull(SkullType)
-	 * skull(SkullType.PLAYER)}.
+	 * accepts skull types. <tt>playerName</tt> must not be null.
 	 * 
 	 * @param player The player whose face will be displayed on the head
 	 * @return this, for chaining
 	 */
 	public @Mutable ItemBuilder skull(OfflinePlayer player) {
-		Reflect.getAdapter().makePlayerHead(resultStack, player);
+		resultStack.setType(Material.PLAYER_HEAD);
+		SkullMeta meta = (SkullMeta) resultStack.getItemMeta();
+		meta.setOwningPlayer(player);
+		resultStack.setItemMeta(meta);
 		return this;
 	}
 
@@ -226,7 +229,7 @@ public class ItemBuilder {
 	 */
 	// TODO: 1.13
 	public @Mutable ItemBuilder mob(EntityType entity) {
-		Reflect.getAdapter().makeSpawnEgg(resultStack, entity);
+		resultStack.setType(Material.ZOMBIE_SPAWN_EGG);
 		return this;
 	}
 

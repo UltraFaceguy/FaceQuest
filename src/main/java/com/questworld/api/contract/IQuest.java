@@ -10,7 +10,8 @@ import com.questworld.api.annotation.NoImpl;
 
 @NoImpl
 public interface IQuest extends DataObject {
-	public static final long COOLDOWN_SCALE = 60 * 1000;
+
+	long COOLDOWN_SCALE = 60 * 1000;
 
 	int getID();
 
@@ -32,15 +33,11 @@ public interface IQuest extends DataObject {
 
 	int getMoney();
 
-	int getPartySize();
-
-	int getXP();
+	double getXP();
 
 	boolean isEnabled();
 
 	List<String> getCommands();
-
-	boolean supportsParties();
 
 	boolean getOrdered();
 
@@ -56,7 +53,21 @@ public interface IQuest extends DataObject {
 
 	String getName();
 
+	String getRewardsLore();
+
 	boolean completeFor(Player p);
 
 	IQuestState getState();
+
+	int getWeight();
+
+	int getModifiedWeight();
+
+	int getLevelRequirement();
+
+	int getModifiedLevelRequirement();
+
+	int getQuestPoints();
+
+	ItemStack generateRewardInfo();
 }

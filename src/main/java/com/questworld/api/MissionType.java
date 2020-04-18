@@ -103,6 +103,9 @@ public abstract class MissionType {
 	}
 
 	public final void buildMenu(IMissionState changes, Menu menu) {
+		putButton(2, MissionButton.partySupport(changes));
+		putButton(3, MissionButton.actionBarUpdates(changes));
+		putButton(4, MissionButton.waypointer(changes));
 		if (supportsDeathReset())
 			putButton(5, MissionButton.deathReset(changes));
 		if (supportsTimeframes())

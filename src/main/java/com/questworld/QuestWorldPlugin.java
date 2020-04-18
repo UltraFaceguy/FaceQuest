@@ -1,5 +1,6 @@
 package com.questworld;
 
+import com.questworld.command.DeluxeQuestsCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
@@ -14,7 +15,6 @@ import com.questworld.listener.MenuListener;
 import com.questworld.listener.PlayerListener;
 import com.questworld.listener.SpawnerListener;
 import com.questworld.util.Log;
-import com.questworld.util.Reflect;
 
 public class QuestWorldPlugin extends JavaPlugin implements Listener {
 	private QuestingImpl api;
@@ -48,7 +48,7 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
 		loadConfigs();
 
-		getCommand("quests").setExecutor(new QuestsCommand());
+		getCommand("quests").setExecutor(new DeluxeQuestsCommand());
 		getCommand("questeditor").setExecutor(new EditorCommand(api));
 
 		getServer().getServicesManager().register(QuestingAPI.class, api, this, ServicePriority.Normal);
@@ -57,18 +57,6 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 		new MenuListener(this);
 		spawnListener = new SpawnerListener(this);
 		new ClickCommand(this);
-
-		GuideBook guide = GuideBook.instance();
-		if (guide.recipe() != null)
-			getServer().addRecipe(guide.recipe());
-		
-		try {
-			Reflect.serverAddChannel(this, Constants.CH_BOOK);
-		}
-		catch(Exception e) {
-			Log.warning("could not register book channel");
-			e.printStackTrace();
-		}
 	}
 
 	public void loadConfigs() {
@@ -111,13 +99,5 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
 		getServer().getServicesManager().unregisterAll(this);
 		getServer().getScheduler().cancelTasks(this);
-		
-		try {
-			Reflect.serverRemoveChannel(this, Constants.CH_BOOK);
-		}
-		catch(Exception e) {
-			Log.warning("could not unregister book channel");
-			e.printStackTrace();
-		}
 	}
 }

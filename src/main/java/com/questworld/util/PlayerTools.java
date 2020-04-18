@@ -1,10 +1,13 @@
 package com.questworld.util;
 
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import land.face.strife.StrifePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -137,13 +140,20 @@ public class PlayerTools {
 				tellraw(player, tellrawMessage);
 
 			if (!titleMessage.isEmpty() || !subtitleMessage.isEmpty()) {
-				Reflect.getAdapter().sendTitle(player, titleMessage, subtitleMessage, 10, 70, 20);
+				TitleUtils.sendTitle(player, titleMessage, subtitleMessage, 70, 10, 20);
 			}
 
 			if (!actionbarMessage.isEmpty()) {
-				Reflect.getAdapter().sendActionbar(player, actionbarMessage);
+				MessageUtils.sendActionBar(player, actionbarMessage);
 			}
 		}
+	}
+
+	public static int getStrifeExpFromPercentage(int requirement, double percentage) {
+		double maxExperience = (double) StrifePlugin.getInstance().getExperienceManager()
+				.getMaxFaceExp(requirement);
+		double exp = maxExperience * Math.abs(percentage);
+		return (int) exp;
 	}
 
 	public static String makeTranslation(boolean prefixed, Translator key, String... replacements) {
@@ -164,63 +174,6 @@ public class PlayerTools {
 		}
 		
 		return "";
-	}
-
-	@SuppressWarnings("deprecation")
-	public static void sendBookView(Player player, String jsonPage, String... extra) {
-		StringBuilder pages = new StringBuilder("{pages:[\"")
-				.append(excape(jsonPage)).append('"');
-		
-		int length = extra.length;
-
-		for (int i = 0; i < length; ++i) {
-			pages.append(",\"").append(excape(extra[i])).append('"');
-		}
-
-		pages.append("]}");
-
-		boolean listening = player.getListeningPluginChannels().contains(Constants.CH_BOOK);
-		
-		if(!listening) {
-			try {
-				Reflect.playerAddChannel(player, Constants.CH_BOOK);
-			}
-			catch (Exception e) {
-				Log.warning("Could not open book channel for player: " + player.getName());
-				e.printStackTrace();
-				return;
-			}
-		}
-		
-		int slot = player.getInventory().getHeldItemSlot();
-		ItemStack old = player.getInventory().getItem(slot);
-		ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
-		
-		Bukkit.getUnsafe().modifyItemStack(book, pages.toString());
-
-		player.getInventory().setItem(slot, book);
-
-		try {
-			player.sendPluginMessage(QuestWorld.getPlugin(), Constants.CH_BOOK, new byte[] {0});
-		}
-		catch(Exception e) {
-			Log.warning("Failed sending book to player: " + player.getName());
-			e.printStackTrace();
-		}
-		finally {
-			player.getInventory().setItem(slot, old);
-	
-			if(!listening) {
-				try {
-					Reflect.playerRemoveChannel(player, Constants.CH_BOOK);
-				}
-				catch (Exception e) {
-					Log.warning("Could not close book channel for player " + player.getName());
-					e.printStackTrace();
-				}
-			}
-		}
-
 	}
 
 	private static volatile ConversationFactory factory;
@@ -337,25 +290,5 @@ public class PlayerTools {
 				}
 			}).map(Bukkit::getOfflinePlayer).filter(OfflinePlayer::hasPlayedBefore).map(OfflinePlayer::getUniqueId);
 		}
-	}
-
-	// Versions 1.13+ map 1 material to 1 block, no reflection is needed
-	private static boolean useReflectPick = !Reflect.getVersion().greaterThan(Versions.v1_12_2.getTaco());
-
-	@SuppressWarnings("deprecation")
-	public static ItemStack getStackOf(Block block) {
-		if(useReflectPick)
-			try {
-				return Reflect.nmsPickBlock(block);
-			}
-			catch(Exception e) {
-				useReflectPick = false;
-				Log.warning(
-						"Failed to reflect \"pickBlock\" method, QuestWorld was not fully prepared for your minecraft version");
-				Log.warning(
-						"Falling back to MaterialData comparison for all future checks. Mining quests may not detect blocks as accurately");
-			}
-
-		return new ItemStack(block.getType());
 	}
 }

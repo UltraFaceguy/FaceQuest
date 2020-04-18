@@ -1,5 +1,7 @@
 package com.questworld.api.contract;
 
+import java.util.List;
+import java.util.Map;
 import org.bukkit.OfflinePlayer;
 
 import com.questworld.api.QuestStatus;
@@ -14,11 +16,15 @@ public interface IPlayerStatus {
 
 	int countQuests(@Nullable ICategory category, @Nullable QuestStatus status);
 
+	int getQuestPoints();
+
+	Map<DeluxeCategory, List<IQuest>> getQuests();
+
 	boolean hasFinished(IQuest quest);
 
 	int getProgress(IMission mission);
 
-	int getProgress(IQuest quest);
+	double getProgress(IQuest quest);
 
 	int getProgress(ICategory category);
 
@@ -37,4 +43,12 @@ public interface IPlayerStatus {
 	String progressString(IQuest quest);
 
 	String progressString();
+
+	enum DeluxeCategory {
+		OPEN_QUESTS,
+		UNFINISHED_QUESTS,
+		DAILY_QUESTS,
+		UNCLAIMED_REWARDS,
+		COMPLETED_QUESTS
+	}
 }

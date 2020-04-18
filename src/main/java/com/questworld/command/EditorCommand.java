@@ -27,9 +27,7 @@ import com.questworld.api.menu.PagedMapping;
 import com.questworld.api.menu.QuestBook;
 import com.questworld.manager.PlayerStatus;
 import com.questworld.util.PlayerTools;
-import com.questworld.util.Reflect;
 import com.questworld.util.Text;
-import com.questworld.util.VersionAdapter;
 
 public class EditorCommand implements CommandExecutor {
 	private static final int PER_PAGE = 7;
@@ -102,28 +100,7 @@ public class EditorCommand implements CommandExecutor {
 				case "progress":
 					progressCmd(sender, label, args);
 					break;
-					
-				case "adapter":
-					VersionAdapter adapter = Reflect.getAdapter();
-	
-					sender.sendMessage("Verison(s) " + adapter.toString());
-					
-					if(sender instanceof Player) {
-						Player player = (Player) sender;
-						
-						ItemStack head = new ItemStack(Material.STONE);
-						ItemStack egg = new ItemStack(Material.STONE);
-						adapter.makePlayerHead(head, player);
-						adapter.makeSpawnEgg(egg, EntityType.PIG);
-						adapter.sendActionbar(player, "test &clight red");
-						adapter.shapelessRecipe("testing", new ItemStack(Material.STONE));
-						adapter.sendTitle(player, "title &lbold (2, 3, 2)", "&agreen sub", 40, 60, 40);
-						
-						player.getInventory().addItem(head, egg);
-					}
-					
-					break;
-					
+
 				case "forceopen":
 					if(args.length >= 3) {
 						Player target = PlayerTools.getPlayer(args[1]);

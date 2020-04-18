@@ -1,5 +1,7 @@
 package com.questworld.listener;
 
+import com.questworld.api.menu.DeluxeCategoryPicker;
+import com.questworld.api.menu.RewardsPrompt;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,6 +24,28 @@ public class MenuListener extends AutoListener {
 
 	public MenuListener(Plugin plugin) {
 		register(plugin);
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onRewardsClick(InventoryClickEvent event) {
+		if (event.getView().getTopInventory().getHolder() instanceof RewardsPrompt) {
+			event.setCancelled(true);
+			if (event.getView().getTopInventory() == event.getClickedInventory()) {
+				RewardsPrompt prompt = (RewardsPrompt) event.getView().getTopInventory().getHolder();
+				prompt.execute((Player) event.getWhoClicked());
+			}
+		}
+	}
+
+	@EventHandler(ignoreCancelled = true)
+	public void onDeluxeClick(InventoryClickEvent event) {
+		if (event.getView().getTopInventory().getHolder() instanceof DeluxeCategoryPicker) {
+			event.setCancelled(true);
+			if (event.getView().getTopInventory() == event.getClickedInventory()) {
+				DeluxeCategoryPicker prompt = (DeluxeCategoryPicker) event.getView().getTopInventory().getHolder();
+				prompt.openCategory((Player) event.getWhoClicked(), event.getSlot());
+			}
+		}
 	}
 
 	@EventHandler(ignoreCancelled = true)

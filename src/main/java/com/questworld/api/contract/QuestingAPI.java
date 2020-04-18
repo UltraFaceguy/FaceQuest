@@ -59,14 +59,4 @@ public interface QuestingAPI extends Reloadable {
 	IPlayerStatus getPlayerStatus(OfflinePlayer player);
 
 	IPlayerStatus getPlayerStatus(UUID uuid);
-
-	IParty getParty(OfflinePlayer player);
-
-	IParty getParty(UUID uuid);
-
-	IParty createParty(OfflinePlayer player);
-
-	IParty createParty(UUID uuid);
-
-	void disbandParty(IParty party);
 }

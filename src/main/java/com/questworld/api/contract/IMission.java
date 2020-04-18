@@ -12,6 +12,7 @@ import com.questworld.api.annotation.NoImpl;
 
 @NoImpl
 public interface IMission extends DataObject {
+
 	int getAmount();
 
 	int getCustomInt();
@@ -39,6 +40,12 @@ public interface IMission extends DataObject {
 	MissionType getType();
 
 	ItemStack getDisplayItem();
+
+	boolean getPartySupport();
+
+	boolean getActionBarUpdates();
+
+	String getWaypointerId();
 
 	int getIndex();
 

@@ -32,8 +32,6 @@ import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 import com.questworld.util.json.JsonBlob;
 import com.questworld.util.json.Prop;
-import com.questworld.util.version.ObjectMap.VDItemStack;
-import com.questworld.util.version.ObjectMap.VDMaterial;
 
 public class MissionButton {
 	public static MenuData item(IMissionState changes) {
@@ -45,7 +43,7 @@ public class MissionButton {
 				event -> {
 					Player p = (Player) event.getWhoClicked();
 					ItemStack hand = p.getInventory().getItemInMainHand();
-					if (hand != null && hand.getType() != Material.AIR)
+					if (hand.getType() != Material.AIR)
 						changes.setItem(hand.clone());
 				}
 		);
@@ -71,6 +69,34 @@ public class MissionButton {
 		);
 	}
 
+	public static MenuData partySupport(IMissionState changes) {
+		return simpleButton(changes,
+				new ItemBuilder(Material.PLAYER_HEAD).wrapText(
+						"&bPARTY SUPPORT: &f" + changes.getPartySupport()).get(),
+				event -> changes.setPartySupport(!changes.getPartySupport())
+		);
+	}
+
+	public static MenuData actionBarUpdates(IMissionState changes) {
+		return simpleButton(changes,
+				new ItemBuilder(Material.NOTE_BLOCK).wrapText(
+						"&bAction Bar Updates: &f" + changes.getActionBarUpdates()).get(),
+				event -> changes.setActionBarUpdates(!changes.getActionBarUpdates())
+		);
+	}
+
+	public static MenuData waypointer(IMissionState changes) {
+		String waypointerId = changes.getWaypointerId();
+
+		return new MenuData(
+				new ItemBuilder(Material.CARTOGRAPHY_TABLE).wrapText(
+						"&7Current Waypoint ID: &e" + waypointerId,
+						"",
+						"&e> Click to change!").get(),
+				event -> QBDialogue.openQuestMissionWaypointEditor((Player) event.getWhoClicked(), changes)
+		);
+	}
+
 	public static MenuData entity(IMissionState changes) {
 		EntityType entity = changes.getEntity();
 
@@ -79,21 +105,7 @@ public class MissionButton {
 						"&7Entity Type: &e" + EntityTools.nameOf(entity),
 						"",
 						"&e> Click to change the entity").get(),
-				event -> {
-					QBDialogue.openQuestMissionEntityEditor((Player) event.getWhoClicked(), changes);
-				}
-		);
-	}
-
-	public static MenuData location(IMissionState changes) {
-		return simpleButton(changes,
-				new ItemBuilder(changes.getDisplayItem()).flagAll().wrapText(
-						Text.stringOf(changes.getLocation(), changes.getCustomInt()),
-						"",
-						"&e> Click to update the location").get(),
-				event -> {
-					changes.setLocation(event.getWhoClicked().getLocation().getBlock().getLocation());
-				}
+				event -> QBDialogue.openQuestMissionEntityEditor((Player) event.getWhoClicked(), changes)
 		);
 	}
 
@@ -154,7 +166,7 @@ public class MissionButton {
 	}
 
 	public static MenuData timeframe(IMissionState changes) {
-		return simpleButton(changes, new ItemBuilder(VDMaterial.CLOCK).wrapText(
+		return simpleButton(changes, new ItemBuilder(Material.CLOCK).wrapText(
 				"&7Complete mission within: &b" + Text.timeFromNum(changes.getTimeframe()),
 				"",
 				"&rLeft click: &e+1m",
@@ -170,7 +182,7 @@ public class MissionButton {
 
 	public static MenuData deathReset(IMissionState changes) {
 		return simpleButton(changes,
-				new ItemBuilder(VDItemStack.getPlayerHead()).wrapText(
+				new ItemBuilder(Material.PLAYER_HEAD).wrapText(
 						"&7Resets on death: " + Text.booleanBadge(changes.getDeathReset()),
 						"",
 						"&e> Click to change whether this Mission's Progress resets when a Player dies").get(),
@@ -181,7 +193,7 @@ public class MissionButton {
 	}
 
 	public static MenuData spawnersAllowed(IMissionState changes) {
-		return simpleButton(changes, new ItemBuilder(VDMaterial.SPAWNER).wrapText(
+		return simpleButton(changes, new ItemBuilder(Material.SPAWNER).wrapText(
 				"&7Allow Mobs from Spawners: " + Text.booleanBadge(changes.getSpawnerSupport()),
 				"",
 				"&e> Click to change whether this Mission will also count Mobs which were spawned by a Mob Spawner")

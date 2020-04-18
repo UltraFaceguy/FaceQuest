@@ -12,6 +12,7 @@ import com.questworld.util.BitFlag.BitString;
 
 @NoImpl
 public interface IMissionState extends IMission {
+
 	void setAmount(int amount);
 
 	void setCustomString(String customString);
@@ -35,6 +36,12 @@ public interface IMissionState extends IMission {
 	void setSpawnerSupport(boolean acceptsSpawners);
 
 	void setTimeframe(int timeframe);
+
+	void setPartySupport(boolean supportsParties);
+
+	void setActionBarUpdates(boolean actionBarUpdates);
+
+	void setWaypointerId(String waypointerId);
 
 	void setType(MissionType type);
 
@@ -64,5 +71,8 @@ public interface IMissionState extends IMission {
 		SPAWNER_SUPPORT,
 		TYPE,
 		TIMEFRAME,
+		PARTY_SHARE,
+		ACTION_BAR,
+		WAYPOINTER
 	}
 }

@@ -35,7 +35,7 @@ public class Menu implements InventoryHolder {
 
 	private Inventory makeInv(int cells) {
 		if (title != null)
-			return Bukkit.createInventory(this, cells);
+			return Bukkit.createInventory(this, cells, title);
 
 		return Bukkit.createInventory(this, cells);
 	}

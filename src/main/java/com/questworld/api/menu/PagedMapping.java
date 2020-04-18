@@ -35,7 +35,7 @@ public class PagedMapping {
 			result = (Stack<Integer>) player.getMetadata(Constants.MD_PAGES).get(0).value();
 		}
 		catch (IndexOutOfBoundsException e) {
-			result = new Stack<Integer>();
+			result = new Stack<>();
 			player.setMetadata(Constants.MD_PAGES, new FixedMetadataValue(QuestWorld.getPlugin(), result));
 		}
 		return result;

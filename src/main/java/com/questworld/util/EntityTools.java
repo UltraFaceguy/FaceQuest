@@ -7,8 +7,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 
 import com.questworld.QuestWorldPlugin;
-import com.questworld.util.version.ObjectMap.VDItemStack;
-import com.questworld.util.version.ObjectMap.VDMaterial;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * A shared home for tools related to entities and entity manipulation.
@@ -57,40 +56,31 @@ public class EntityTools {
 		
 		switch (type) {
 			case PLAYER:
-				return new ItemBuilder(VDItemStack.getPlayerHead());
+				return new ItemBuilder(new ItemStack(Material.PLAYER_HEAD));
 				
 			case GIANT:
-				return new ItemBuilder(VDItemStack.getZombieHead());
+				return new ItemBuilder(Material.ZOMBIE_HEAD);
 				
 			case ENDER_DRAGON:
-				return new ItemBuilder(VDItemStack.getDragonHead());
+				return new ItemBuilder(Material.DRAGON_HEAD);
 
 			case WITHER:
-				return new ItemBuilder(VDItemStack.getWitherSkull());
+				return new ItemBuilder(Material.WITHER_SKELETON_SKULL);
 				
 			case ILLUSIONER:
-				return new ItemBuilder(VDMaterial.ENDER_EYE);
+				return new ItemBuilder(Material.ENDER_EYE);
 			
 			case ARMOR_STAND:
 				return new ItemBuilder(Material.ARMOR_STAND);
 
 			case SNOWMAN:
-				return new ItemBuilder(VDMaterial.SNOWBALL);
+				return new ItemBuilder(Material.SNOWBALL);
 				
 			case IRON_GOLEM:
 				return new ItemBuilder(Material.IRON_INGOT);
 
 			default:
-				
-				try {
-					ItemBuilder ib = new ItemBuilder(Material.STONE);
-					Reflect.getAdapter().makeSpawnEgg(ib.get(), type);
-					
-					return ib;
-				}
-				catch (IllegalArgumentException e) {
-					return new ItemBuilder(Material.BARRIER);
-				}
+				return new ItemBuilder(Material.ZOMBIE_SPAWN_EGG);
 		}
 	}
 

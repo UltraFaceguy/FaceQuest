@@ -14,7 +14,6 @@ import com.questworld.api.contract.MissionEntry;
 import com.questworld.api.menu.MissionButton;
 import com.questworld.util.EntityTools;
 import com.questworld.util.ItemBuilder;
-import com.questworld.util.version.ObjectMap.VDMaterial;
 
 public class KillNamedMission extends KillMission {
 	private static final int EXACT = 0;
@@ -22,7 +21,7 @@ public class KillNamedMission extends KillMission {
 
 	public KillNamedMission() {
 		setName("KILL_NAMED_MOB");
-		setSelectorItem(new ItemStack(VDMaterial.GOLDEN_SWORD));
+		setSelectorItem(new ItemStack(Material.GOLDEN_SWORD));
 	}
 
 	@Override
@@ -57,11 +56,13 @@ public class KillNamedMission extends KillMission {
 		for (MissionEntry r : QuestWorld.getMissionEntries(this, killer)) {
 			IMission mission = r.getMission();
 			EntityType type = mission.getEntity();
-			if ((type == e.getEntityType() || type == EntityTools.ANY_ENTITY)
-					&& (mission.getSpawnerSupport() || !EntityTools.isFromSpawner(e.getEntity()))
-					&& (mission.getCustomInt() == EXACT && name.equals(mission.getCustomString())
-							|| mission.getCustomInt() == CONTAINS && name.contains(mission.getCustomString())))
+			if (type != EntityTools.ANY_ENTITY && type != e.getEntityType()) {
+				continue;
+			}
+			if (mission.getCustomInt() == EXACT && name.equals(mission.getCustomString())
+							|| mission.getCustomInt() == CONTAINS && name.contains(mission.getCustomString())) {
 				r.addProgress(1);
+			}
 		}
 	}
 
@@ -69,13 +70,12 @@ public class KillNamedMission extends KillMission {
 	protected void layoutMenu(IMissionState changes) {
 		super.layoutMenu(changes);
 		putButton(12, MissionButton.entityName(changes));
+		putButton(15, MissionButton.partySupport(changes));
 		putButton(16, MissionButton.simpleButton(changes,
 				new ItemBuilder(Material.GOLDEN_APPLE)
 						.display("&7Name match type")
 						.selector(changes.getCustomInt(), "Exact", "Contains").get(),
-				event -> {
-					changes.setCustomInt(1 - changes.getCustomInt());
-				}
+				event -> changes.setCustomInt(changes.getCustomInt() == 0 ? 1 : 0)
 		));
 	}
 }

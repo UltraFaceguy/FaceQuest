@@ -70,35 +70,6 @@ public class ProgressTracker implements Reloadable {
 		return config;
 	}
 
-	//// PARTY
-	public UUID getPartyLeader() {
-		return Text.toUniqueId(config.getString("party.associated", null));
-	}
-
-	public void setPartyLeader(UUID uuid) {
-		if (uuid != null)
-			config.set("party.associated", uuid.toString());
-		else
-			config.set("party.associated", null);
-	}
-
-	public Set<UUID> getPartyMembers() {
-		return config.getStringList("party.members").stream().map(Text::toUniqueId).filter(uuid -> uuid != null)
-				.collect(Collectors.toSet());
-	}
-
-	public void setPartyMembers(Set<UUID> members) {
-		config.set("party.members", members.stream().map(UUID::toString).collect(Collectors.toList()));
-	}
-
-	public Set<UUID> getPartyPending() {
-		return config.getStringList("party.pending-requests").stream().map(Text::toUniqueId)
-				.filter(uuid -> uuid != null).collect(Collectors.toSet());
-	}
-
-	public void setPartyPending(Set<UUID> pending) {
-		config.set("party.pending-requests", pending.stream().map(UUID::toString).collect(Collectors.toList()));
-	}
 
 	//// CATEGORY	
 	@Deprecated

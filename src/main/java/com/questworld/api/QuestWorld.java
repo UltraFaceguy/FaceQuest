@@ -10,7 +10,6 @@ import org.bukkit.plugin.Plugin;
 
 import com.questworld.api.contract.IFacade;
 import com.questworld.api.contract.IMission;
-import com.questworld.api.contract.IParty;
 import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.MissionEntry;
 import com.questworld.api.contract.QuestingAPI;
@@ -110,26 +109,6 @@ public final class QuestWorld {
 
 	public static IPlayerStatus getPlayerStatus(UUID uuid) {
 		return api.getPlayerStatus(uuid);
-	}
-
-	public static IParty getParty(OfflinePlayer player) {
-		return api.getParty(player);
-	}
-
-	public static IParty getParty(UUID uuid) {
-		return api.getParty(uuid);
-	}
-
-	public static IParty createParty(OfflinePlayer player) {
-		return api.createParty(player);
-	}
-
-	public static IParty createParty(UUID uuid) {
-		return api.createParty(uuid);
-	}
-
-	public static void disbandParty(IParty party) {
-		api.disbandParty(party);
 	}
 
 	public static QuestingAPI getAPI() {

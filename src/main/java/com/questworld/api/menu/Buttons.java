@@ -15,6 +15,7 @@ import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 
 public class Buttons {
+
 	public static Consumer<InventoryClickEvent> onCategory(ICategory category) {
 		return event -> {
 			Player p = (Player) event.getWhoClicked();
@@ -81,16 +82,6 @@ public class Buttons {
 
 						return true;
 					}));
-		};
-	}
-
-	public static Consumer<InventoryClickEvent> partyMenu() {
-		return event -> {
-			if (QuestWorld.getPlugin().getConfig().getBoolean("party.enabled")) {
-				Player p = (Player) event.getWhoClicked();
-
-				QuestBook.openPartyMenu(p);
-			}
 		};
 	}
 }
