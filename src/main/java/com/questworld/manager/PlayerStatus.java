@@ -496,24 +496,15 @@ public class PlayerStatus implements IPlayerStatus {
     of(uuid).inDialogue = false;
     ifOnline(uuid).ifPresent(player -> {
 
-      if (task.getDialogue().isEmpty()) {
-        PlayerTools.sendTranslation(player, false, Translation.NOTIFY_COMPLETED,
-            task.getQuest().getName(), task.getText());
-        return;
-      }
-
       if (dialogue.hasNext()) {
         sendDialogueComponent(player, dialogue.next());
-        if (dialogue.hasNext()) {
-          of(uuid).inDialogue = true;
-          Bukkit.getScheduler().scheduleSyncDelayedTask(QuestWorld.getPlugin(),
-              () -> sendDialogue(uuid, task, dialogue), 70L);
-        }
-        return;
+        of(uuid).inDialogue = true;
+        Bukkit.getScheduler().scheduleSyncDelayedTask(QuestWorld.getPlugin(),
+            () -> sendDialogue(uuid, task, dialogue), 70L);
+      } else {
+        PlayerTools.sendTranslation(player, false, Translation.NOTIFY_COMPLETED,
+            task.getQuest().getName(), task.getText());
       }
-
-      PlayerTools.sendTranslation(player, false, Translation.NOTIFY_COMPLETED,
-          task.getQuest().getName(), task.getText());
     });
   }
 
