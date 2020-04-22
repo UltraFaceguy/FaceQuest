@@ -8,7 +8,6 @@ import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
 import com.questworld.api.contract.IQuest;
-import com.questworld.api.contract.IQuestState;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
@@ -147,6 +146,7 @@ public class DeluxeQuestBook {
 
     if (manager.getStatus(quest) == QuestStatus.REWARD_CLAIMABLE) {
       new RewardsPrompt(quest, p);
+      return;
     }
 
     String title = ChatColor.stripColor(quest.getName());
