@@ -40,6 +40,8 @@ public interface QuestingAPI extends Reloadable {
 
 	Optional<Economy> getEconomy();
 
+	int getMaxQuestPoints();
+
 	IFacade getFacade();
 
 	Sounds getSounds();

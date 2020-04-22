@@ -48,6 +48,8 @@ import com.questworld.util.Text;
 public class PlayerStatus implements IPlayerStatus {
 
   private WeightComparator weightComparator = new WeightComparator();
+  private int questPoints = 0;
+  private long questPointTimestamp = System.currentTimeMillis();
 
   private static PlayerStatus of(OfflinePlayer player) {
     return (PlayerStatus) QuestWorld.getAPI().getPlayerStatus(player);
@@ -67,15 +69,19 @@ public class PlayerStatus implements IPlayerStatus {
 
   @Override
   public int getQuestPoints() {
-    int points = 0;
-    for (ICategory category : QuestWorld.getFacade().getCategories()) {
-      for (IQuest quest : category.getQuests()) {
-        if (hasFinished(quest) && getStatus(quest) != QuestStatus.REWARD_CLAIMABLE) {
-          points += quest.getQuestPoints();
+    if (System.currentTimeMillis() > questPointTimestamp) {
+      questPointTimestamp = System.currentTimeMillis() + 300000;
+      int points = 0;
+      for (ICategory category : QuestWorld.getFacade().getCategories()) {
+        for (IQuest quest : category.getQuests()) {
+          if (hasFinished(quest) && getStatus(quest) != QuestStatus.REWARD_CLAIMABLE) {
+            points += quest.getQuestPoints();
+          }
         }
       }
+      questPoints = points;
     }
-    return points;
+    return questPoints;
   }
 
   @Override

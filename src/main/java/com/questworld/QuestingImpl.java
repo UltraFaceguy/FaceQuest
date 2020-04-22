@@ -1,5 +1,6 @@
 package com.questworld;
 
+import com.questworld.api.contract.IQuest;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +50,8 @@ public final class QuestingImpl implements QuestingAPI {
 	private Optional<Economy> econ = Optional.empty();
 	private boolean hasPapi;
 	private Sounds eventSounds;
+	private int maxQuestPoints;
+	private long questPointTimestamp;
 
 	public QuestingImpl(QuestWorldPlugin questWorld) {
 		extensions = new ExtensionInstaller(questWorld, this);
@@ -73,6 +76,8 @@ public final class QuestingImpl implements QuestingAPI {
 
 		if (!econ.isPresent())
 			Log.info("No economy (vault) found, money rewards disabled");
+
+		questPointTimestamp = System.currentTimeMillis();
 
 		QuestWorld.setAPI(this);
 	}
@@ -135,6 +140,21 @@ public final class QuestingImpl implements QuestingAPI {
 	@Override
 	public Optional<Economy> getEconomy() {
 		return econ;
+	}
+
+	@Override
+	public int getMaxQuestPoints() {
+		if (System.currentTimeMillis() > questPointTimestamp) {
+			questPointTimestamp = System.currentTimeMillis() + 300000;
+			int maxPoints = 0;
+			for (ICategory c : getFacade().getCategories()) {
+				for (IQuest q : c.getQuests()) {
+					maxPoints += q.getQuestPoints();
+				}
+			}
+			maxQuestPoints = maxPoints;
+		}
+		return maxQuestPoints;
 	}
 
 	@Override

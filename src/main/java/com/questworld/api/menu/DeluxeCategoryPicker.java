@@ -1,12 +1,8 @@
 package com.questworld.api.menu;
 
-import com.questworld.QuestingImpl;
-import com.questworld.api.QuestStatus;
 import com.questworld.api.QuestWorld;
 import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
 import com.questworld.api.contract.IQuest;
-import com.questworld.api.contract.QuestingAPI;
-import com.questworld.manager.PlayerStatus;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
@@ -20,7 +16,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
 
 public class DeluxeCategoryPicker implements InventoryHolder {
@@ -91,7 +86,8 @@ public class DeluxeCategoryPicker implements InventoryHolder {
       int questPoints = QuestWorld.getAPI().getPlayerStatus(player).getQuestPoints();
       List<String> lore = new ArrayList<>();
       for (String s : ItemStackExtensionsKt.getLore(stack)) {
-        lore.add(s.replace("{qp}", Integer.toString(questPoints)));
+        lore.add(s.replace("{qp}", Integer.toString(questPoints))
+            .replace("{mqp}", Integer.toString(QuestWorld.getAPI().getMaxQuestPoints())));
       }
       ItemStackExtensionsKt.setLore(stack, lore);
     }
@@ -147,7 +143,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     ItemStack stack = new ItemStack(Material.NETHER_STAR);
     ItemStackExtensionsKt.setDisplayName(stack, TextUtils.color("&8Completed Quests"));
     List<String> lore = new ArrayList<>();
-    lore.add("&f&lQuestPoints: {qp}");
+    lore.add("&f&lQuestPoints: {qp}/{mqp}");
     lore.add("&7Click to check quests that");
     lore.add("&7you have already done!");
     lore = TextUtils.color(lore);

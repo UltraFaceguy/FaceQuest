@@ -17,6 +17,7 @@ import com.questworld.listener.SpawnerListener;
 import com.questworld.util.Log;
 
 public class QuestWorldPlugin extends JavaPlugin implements Listener {
+
 	private QuestingImpl api;
 	private int autosaveHandle = -1;
 	private int questCheckHandle = -1;
