@@ -70,18 +70,22 @@ public class PlayerStatus implements IPlayerStatus {
   @Override
   public int getQuestPoints() {
     if (System.currentTimeMillis() > questPointTimestamp) {
-      questPointTimestamp = System.currentTimeMillis() + 300000;
-      int points = 0;
-      for (ICategory category : QuestWorld.getFacade().getCategories()) {
-        for (IQuest quest : category.getQuests()) {
-          if (hasFinished(quest) && getStatus(quest) != QuestStatus.REWARD_CLAIMABLE) {
-            points += quest.getQuestPoints();
-          }
-        }
-      }
-      questPoints = points;
+      updateQuestPoints();
     }
     return questPoints;
+  }
+
+  public void updateQuestPoints() {
+    questPointTimestamp = System.currentTimeMillis() + 300000;
+    int points = 0;
+    for (ICategory category : QuestWorld.getFacade().getCategories()) {
+      for (IQuest quest : category.getQuests()) {
+        if (hasFinished(quest) && getStatus(quest) != QuestStatus.REWARD_CLAIMABLE) {
+          points += quest.getQuestPoints();
+        }
+      }
+    }
+    questPoints = points;
   }
 
   @Override
@@ -545,6 +549,7 @@ public class PlayerStatus implements IPlayerStatus {
         setProgress(task, 0);
       }
     }
+    updateQuestPoints();
   }
 
   public ProgressTracker getTracker() {

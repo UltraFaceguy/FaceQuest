@@ -18,6 +18,8 @@ public interface IPlayerStatus {
 
 	int getQuestPoints();
 
+	void updateQuestPoints();
+
 	Map<DeluxeCategory, List<IQuest>> getQuests();
 
 	boolean hasFinished(IQuest quest);
