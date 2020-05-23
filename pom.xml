@@ -57,10 +57,6 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>vault-repo</id>
-			<url>http://nexus.hc.to/content/repositories/pub_releases</url>
-		</repository>
-		<repository>
 			<id>placeholderapi</id>
 			<url>http://repo.extendedclip.com/content/repositories/placeholderapi/</url>
 		</repository>
@@ -85,11 +81,10 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>net.milkbowl.vault</groupId>
+			<groupId>com.github.MilkBowl</groupId>
 			<artifactId>VaultAPI</artifactId>
 			<version>1.7</version>
 			<scope>provided</scope>
-			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>me.clip</groupId>
