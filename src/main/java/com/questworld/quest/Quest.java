@@ -2,6 +2,15 @@ package com.questworld.quest;
 
 import static com.questworld.util.PlayerTools.getStrifeExpFromPercentage;
 
+import com.questworld.QuestWorldPlugin;
+import com.questworld.api.QuestWorld;
+import com.questworld.api.contract.IMission;
+import com.questworld.api.contract.IQuest;
+import com.questworld.api.contract.IQuestState;
+import com.questworld.api.event.CancellableEvent;
+import com.questworld.api.event.QuestCompleteEvent;
+import com.questworld.util.ItemBuilder;
+import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
@@ -16,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import land.face.strife.StrifePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -24,16 +32,6 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import com.questworld.QuestWorldPlugin;
-import com.questworld.api.QuestWorld;
-import com.questworld.api.contract.IMission;
-import com.questworld.api.contract.IQuest;
-import com.questworld.api.contract.IQuestState;
-import com.questworld.api.event.CancellableEvent;
-import com.questworld.api.event.QuestCompleteEvent;
-import com.questworld.util.ItemBuilder;
-import com.questworld.util.Text;
 
 class Quest extends UniqueObject implements IQuestState {
 
@@ -503,7 +501,7 @@ class Quest extends UniqueObject implements IQuestState {
 
     if (money > 0) {
       QuestWorld.getEconomy().ifPresent(economy -> economy.depositPlayer(p, money));
-      MessageUtils.sendMessage(p, "&6You were awarded &f" + money + " Bits&6!");
+      MessageUtils.sendMessage(p, "&e  +" + money + " Bit(s)!");
     }
 
     if (xp > 0) {

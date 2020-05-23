@@ -1,12 +1,11 @@
 package com.questworld.api.contract;
 
-import java.util.List;
-import java.util.Map;
-import org.bukkit.OfflinePlayer;
-
 import com.questworld.api.QuestStatus;
 import com.questworld.api.annotation.NoImpl;
 import com.questworld.api.annotation.Nullable;
+import java.util.List;
+import java.util.Map;
+import org.bukkit.OfflinePlayer;
 
 @NoImpl
 public interface IPlayerStatus {
@@ -17,6 +16,8 @@ public interface IPlayerStatus {
 	int countQuests(@Nullable ICategory category, @Nullable QuestStatus status);
 
 	int getQuestPoints();
+
+	boolean isInDialogue();
 
 	void updateQuestPoints();
 

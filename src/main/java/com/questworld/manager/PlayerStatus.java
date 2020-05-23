@@ -1,33 +1,5 @@
 package com.questworld.manager;
 
-import com.questworld.api.menu.RewardsPrompt;
-import com.questworld.quest.WeightComparator;
-import com.tealcube.minecraft.bukkit.TextUtils;
-import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
-import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
-import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-
-import land.face.SnazzyPartiesPlugin;
-import land.face.data.Party;
-import land.face.waypointer.WaypointerPlugin;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Sound;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.InventoryHolder;
-
 import com.questworld.Directories;
 import com.questworld.QuestingImpl;
 import com.questworld.api.MissionType;
@@ -42,14 +14,48 @@ import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IQuest;
 import com.questworld.api.event.MissionCompletedEvent;
 import com.questworld.api.menu.LinkedMenu;
+import com.questworld.api.menu.RewardsPrompt;
+import com.questworld.quest.WeightComparator;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
+import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
+import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import land.face.SnazzyPartiesPlugin;
+import land.face.data.Party;
+import land.face.waypointer.WaypointerPlugin;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.InventoryHolder;
 
 public class PlayerStatus implements IPlayerStatus {
 
   private WeightComparator weightComparator = new WeightComparator();
   private int questPoints = 0;
   private long questPointTimestamp = System.currentTimeMillis();
+  private boolean inDialogue = false;
+  private final UUID playerUUID;
+  private final ProgressTracker tracker;
+
+  public PlayerStatus(UUID uuid) {
+    this.playerUUID = uuid;
+    tracker = new ProgressTracker(uuid);
+  }
 
   private static PlayerStatus of(OfflinePlayer player) {
     return (PlayerStatus) QuestWorld.getAPI().getPlayerStatus(player);
@@ -59,12 +65,9 @@ public class PlayerStatus implements IPlayerStatus {
     return (PlayerStatus) QuestWorld.getAPI().getPlayerStatus(uuid);
   }
 
-  private final UUID playerUUID;
-  private final ProgressTracker tracker;
-
-  public PlayerStatus(UUID uuid) {
-    this.playerUUID = uuid;
-    tracker = new ProgressTracker(uuid);
+  @Override
+  public boolean isInDialogue() {
+    return inDialogue;
   }
 
   @Override
@@ -75,6 +78,7 @@ public class PlayerStatus implements IPlayerStatus {
     return questPoints;
   }
 
+  @Override
   public void updateQuestPoints() {
     questPointTimestamp = System.currentTimeMillis() + 300000;
     int points = 0;
@@ -272,7 +276,12 @@ public class PlayerStatus implements IPlayerStatus {
   }
 
   public void update(boolean quest_check) {
+
     Player p = asOnline(playerUUID);
+
+    if (inDialogue) {
+      return;
+    }
 
     if (quest_check) {
       for (IMission mission : QuestWorld.getViewer().getTickingMissions()) {
@@ -396,16 +405,18 @@ public class PlayerStatus implements IPlayerStatus {
 
   @Override
   public String progressString(IQuest quest) {
+    QuestStatus status = getStatus(quest);
+    if (status == QuestStatus.FINISHED || status == QuestStatus.ON_COOLDOWN) {
+      return Text.progressBar(10, 10, StringUtils.EMPTY);
+    }
     int progress = 0;
+    int max = 0;
     for (IMission mission : quest.getMissions()) {
-      if (hasCompletedTask(mission)) {
-        ++progress;
-      }
+      max += mission.getCustomInt();
+      progress += mission.getAmount();
     }
 
-    int amount = quest.getMissions().size();
-
-    return Text.progressBar(progress, amount, StringUtils.EMPTY);
+    return Text.progressBar(progress, max, StringUtils.EMPTY);
   }
 
   @Override
@@ -443,15 +454,18 @@ public class PlayerStatus implements IPlayerStatus {
       Set<Player> members = SnazzyPartiesPlugin.getInstance().getPartyManager()
           .getNearbyPlayers(party, location, 35D);
       for (Player p : members) {
-        if (p.getUniqueId() == playerUUID) {
+        if (p.getUniqueId().equals(playerUUID)) {
           continue;
         }
-        of(p.getUniqueId()).setSingleProgress(task, amount);
+        PlayerStatus partyMemberStatus = of(p.getUniqueId());
+        if (partyMemberStatus.getStatus(task.getQuest().getState()) == QuestStatus.AVAILABLE) {
+          partyMemberStatus.setSingleProgress(task, amount);
+        }
       }
     }
   }
 
-  private void updateQuestWaypoint(IMission currentTask) {
+  private static void updateQuestWaypoint(IMission currentTask, Player player) {
     Iterator iterator = currentTask.getQuest().getOrderedMissions().iterator();
     while (iterator.hasNext()) {
       IMission task = (IMission) iterator.next();
@@ -459,8 +473,8 @@ public class PlayerStatus implements IPlayerStatus {
         if (iterator.hasNext()) {
           IMission nextTask = (IMission) iterator.next();
           if (StringUtils.isNotBlank(nextTask.getWaypointerId())) {
-            WaypointerPlugin.getInstance().getWaypointManager()
-                .setWaypoint((Player) getPlayer(), nextTask.getWaypointerId());
+            WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(player,
+                nextTask.getWaypointerId());
           }
         }
         break;
@@ -478,10 +492,6 @@ public class PlayerStatus implements IPlayerStatus {
 
     boolean complete = amount == task.getAmount();
 
-    if (complete && task.getQuest().getOrdered()) {
-      updateQuestWaypoint(task);
-    }
-
     if (task.getActionBarUpdates()) {
       String actionBar;
       if (complete) {
@@ -496,24 +506,29 @@ public class PlayerStatus implements IPlayerStatus {
 
     if (complete) {
       Bukkit.getPluginManager().callEvent(new MissionCompletedEvent(task));
-      sendDialogue(playerUUID, task, task.getDialogue().iterator());
+      sendDialogue(this, task, task.getDialogue().iterator());
     }
   }
 
-  protected boolean inDialogue = false;
-
-  public static void sendDialogue(UUID uuid, IMission task, Iterator<String> dialogue) {
-    of(uuid).inDialogue = false;
-    ifOnline(uuid).ifPresent(player -> {
+  public static void sendDialogue(PlayerStatus status, IMission task, Iterator<String> dialogue) {
+    of(status.playerUUID).inDialogue = false;
+    ifOnline(status.playerUUID).ifPresent(player -> {
 
       if (dialogue.hasNext()) {
         sendDialogueComponent(player, dialogue.next());
-        of(uuid).inDialogue = true;
+        of(status.playerUUID).inDialogue = true;
+        player.playSound(player.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1, 2);
         Bukkit.getScheduler().scheduleSyncDelayedTask(QuestWorld.getPlugin(),
-            () -> sendDialogue(uuid, task, dialogue), 70L);
+            () -> sendDialogue(status, task, dialogue), 50L);
       } else {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
         PlayerTools.sendTranslation(player, false, Translation.NOTIFY_COMPLETED,
             task.getQuest().getName(), task.getText());
+        status.update();
+        if (task.getQuest().getOrdered()) {
+          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(), () ->
+              updateQuestWaypoint(task, player), 50L);
+        }
       }
     });
   }
