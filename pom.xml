@@ -32,7 +32,7 @@
 	<parent>
 		<groupId>io.pixeloutlaw</groupId>
 		<artifactId>spigot-plugin-parent</artifactId>
-		<version>1.15.1.4</version>
+		<version>1.15.2.0</version>
 	</parent>
 
 	<build>
@@ -81,7 +81,7 @@
 		<dependency>
 			<groupId>io.pixeloutlaw</groupId>
 			<artifactId>facecore</artifactId>
-			<version>1.15.2.4</version>
+			<version>1.15.2.6</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -112,7 +112,7 @@
 		<dependency>
 			<groupId>io.pixeloutlaw</groupId>
 			<artifactId>strife</artifactId>
-			<version>3.0.6</version>
+			<version>3.0.7</version>
 		</dependency>
 	</dependencies>
 	<properties>
