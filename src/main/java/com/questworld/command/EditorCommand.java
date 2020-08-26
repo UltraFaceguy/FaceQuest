@@ -1,22 +1,5 @@
 package com.questworld.command;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
 import com.questworld.GuideBook;
 import com.questworld.QuestingImpl;
 import com.questworld.api.QuestWorld;
@@ -28,6 +11,18 @@ import com.questworld.api.menu.QuestBook;
 import com.questworld.manager.PlayerStatus;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class EditorCommand implements CommandExecutor {
 	private static final int PER_PAGE = 7;
@@ -366,7 +361,7 @@ public class EditorCommand implements CommandExecutor {
 
 			else {
 				ArrayList<? extends IQuest> quests = new ArrayList<>(category.getQuests());
-				Collections.sort(quests, (l, r) -> l.getID() - r.getID());
+				quests.sort(Comparator.comparingInt(IQuest::getID));
 				int end = Math.min(PER_PAGE * (page + 1), quests.size());
 
 				sender.sendMessage(
@@ -383,7 +378,7 @@ public class EditorCommand implements CommandExecutor {
 				status.getTracker().clearCategory(cat);
 		else {
 			ArrayList<? extends ICategory> categories = new ArrayList<>(QuestWorld.getFacade().getCategories());
-			Collections.sort(categories, (l, r) -> l.getID() - r.getID());
+			categories.sort(Comparator.comparingInt(ICategory::getID));
 			int end = Math.min(PER_PAGE * (page + 1), categories.size());
 
 			sender.sendMessage(

@@ -1,104 +1,119 @@
 package com.questworld;
 
+import com.questworld.api.contract.QuestingAPI;
+import com.questworld.command.ClickCommand;
 import com.questworld.command.DeluxeQuestsCommand;
+import com.questworld.command.EditorCommand;
+import com.questworld.command.QuestProgressCommand;
+import com.questworld.listener.MenuListener;
+import com.questworld.listener.MoneyDropListener;
+import com.questworld.listener.PlayerListener;
+import com.questworld.listener.SpawnerListener;
+import com.questworld.util.Log;
+import java.text.DecimalFormat;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import com.questworld.api.QuestWorld;
-import com.questworld.api.contract.QuestingAPI;
-import com.questworld.command.ClickCommand;
-import com.questworld.command.EditorCommand;
-import com.questworld.command.QuestsCommand;
-import com.questworld.listener.MenuListener;
-import com.questworld.listener.PlayerListener;
-import com.questworld.listener.SpawnerListener;
-import com.questworld.util.Log;
-
 public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
-	private QuestingImpl api;
-	private int autosaveHandle = -1;
-	private int questCheckHandle = -1;
-	
-	private SpawnerListener spawnListener;
+  private static QuestWorldPlugin _INSTANCE;
+  private QuestingImpl api;
 
-	public static QuestWorldPlugin get() {
-		return (QuestWorldPlugin) QuestWorld.getPlugin();
-	}
-	
-	public static QuestingImpl getAPI() {
-		return (QuestingImpl) QuestWorld.getAPI();
-	}
-	
-	public SpawnerListener getSpawnListener() {
-		return spawnListener;
-	}
+  private int autosaveHandle = -1;
+  private int questCheckHandle = -1;
 
-	@Override
-	public void onLoad() {
-		saveDefaultConfig();
-		Log.setLogger(getLogger());
-	}
+  private SpawnerListener spawnListener;
 
-	@Override
-	public void onEnable() {
-		api = new QuestingImpl(this);
-		api.load();
+  public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###");
 
-		loadConfigs();
+  public static QuestWorldPlugin get() {
+    return _INSTANCE;
+  }
 
-		getCommand("quests").setExecutor(new DeluxeQuestsCommand());
-		getCommand("questeditor").setExecutor(new EditorCommand(api));
+  public static QuestingImpl getAPI() {
+    return _INSTANCE.api;
+  }
 
-		getServer().getServicesManager().register(QuestingAPI.class, api, this, ServicePriority.Normal);
+  @Override
+  public void onLoad() {
+    saveDefaultConfig();
+    Log.setLogger(getLogger());
+  }
 
-		new PlayerListener(api);
-		new MenuListener(this);
-		spawnListener = new SpawnerListener(this);
-		new ClickCommand(this);
-	}
+  @Override
+  public void onEnable() {
+    _INSTANCE = this;
+    api = new QuestingImpl(this);
+    api.load();
 
-	public void loadConfigs() {
-		reloadConfig();
+    loadConfigs();
 
-		if (questCheckHandle != -1)
-			getServer().getScheduler().cancelTask(questCheckHandle);
+    getCommand("quests").setExecutor(new DeluxeQuestsCommand());
+    getCommand("questeditor").setExecutor(new EditorCommand(api));
+    getCommand("q-external").setExecutor(new QuestProgressCommand(api));
 
-		questCheckHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
-			for (Player p : getServer().getOnlinePlayers())
-				api.getPlayerStatus(p).update(true);
-		}, 0L, getConfig().getInt("options.quest-check-delay"));
+    getServer().getServicesManager().register(QuestingAPI.class, api, this, ServicePriority.Normal);
 
-		int autosave = getConfig().getInt("options.autosave-interval") * 20 * 60; // minutes to ticks
+    if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+      new QuestPlaceholders().register();
+    }
 
-		if (autosaveHandle != -1) {
-			getServer().getScheduler().cancelTask(autosaveHandle);
-			autosaveHandle = -1;
-		}
+    new PlayerListener(api);
+    new MenuListener(this);
+    new MoneyDropListener(this);
+    spawnListener = new SpawnerListener(this);
+    new ClickCommand(this);
+  }
 
-		if (autosave > 0)
-			autosaveHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, api::onSave, autosave,
-					autosave);
-	}
+  public void loadConfigs() {
+    reloadConfig();
 
-	@Override
-	public void onDisable() {
-		api.onSave();
-		api.onDiscard();
-		
-		for(Player p : getServer().getOnlinePlayers()) {
-			p.removeMetadata(Constants.MD_LAST_MENU, this);
-			p.removeMetadata(Constants.MD_PAGES, this);
-		}
+    if (questCheckHandle != -1) {
+      getServer().getScheduler().cancelTask(questCheckHandle);
+    }
 
-		autosaveHandle = -1;
-		questCheckHandle = -1;
+    questCheckHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+      for (Player p : getServer().getOnlinePlayers()) {
+        api.getPlayerStatus(p).update(true);
+      }
+    }, 0L, getConfig().getInt("options.quest-check-delay"));
 
-		Log.setLogger(null);
+    int autosave = getConfig().getInt("options.autosave-interval") * 20 * 60; // minutes to ticks
 
-		getServer().getServicesManager().unregisterAll(this);
-		getServer().getScheduler().cancelTasks(this);
-	}
+    if (autosaveHandle != -1) {
+      getServer().getScheduler().cancelTask(autosaveHandle);
+      autosaveHandle = -1;
+    }
+
+    if (autosave > 0) {
+      autosaveHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, api::onSave, autosave,
+          autosave);
+    }
+  }
+
+  @Override
+  public void onDisable() {
+    api.onSave();
+    api.onDiscard();
+
+    for (Player p : getServer().getOnlinePlayers()) {
+      p.removeMetadata(Constants.MD_LAST_MENU, this);
+      p.removeMetadata(Constants.MD_PAGES, this);
+    }
+
+    autosaveHandle = -1;
+    questCheckHandle = -1;
+
+    Log.setLogger(null);
+
+    getServer().getServicesManager().unregisterAll(this);
+    getServer().getScheduler().cancelTasks(this);
+  }
+
+  public SpawnerListener getSpawnListener() {
+    return spawnListener;
+  }
 }

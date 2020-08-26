@@ -47,7 +47,7 @@ public class PlayerStatus implements IPlayerStatus {
 
   private WeightComparator weightComparator = new WeightComparator();
   private int questPoints = 0;
-  private long questPointTimestamp = System.currentTimeMillis();
+  private long questPointTimestamp = 0;
   private boolean inDialogue = false;
   private final UUID playerUUID;
   private final ProgressTracker tracker;

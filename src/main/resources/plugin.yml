@@ -3,10 +3,10 @@ version: ${version}
 author: mrCookieSlime
 authors: [ezeiger92, erik1988]
 website: https://github.com/ezeiger92/QuestWorld2
-api-version: 1.15
+api-version: 1.16
 
 main: com.questworld.QuestWorldPlugin
-softdepend: [ASkyBlock, ChatReaction, Citizens, PlaceholderAPI, Vault, Votifier]
+softdepend: [ASkyBlock, ChatReaction, Citizens, PlaceholderAPI, Vault, Votifier, Bullion]
 
 commands:
   quests:
@@ -21,6 +21,10 @@ commands:
     description: Opens up the quest editor
     usage: /questeditor <gui/import/export>
     aliases: [qe]
+    permission: QuestWorld.editor
+  q-external:
+    description: Command progress for external command missions
+    usage: /q-external <player> <id> [amount]
     permission: QuestWorld.editor
 
 permissions:

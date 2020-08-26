@@ -23,6 +23,7 @@ import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 import com.questworld.util.json.JsonBlob;
 import com.questworld.util.json.Prop;
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -126,6 +127,30 @@ public class MissionButton {
             changes.setCustomString(Text.deserializeNewline(Text.colorize(s)));
             if (changes.apply()) {
               PlayerTools.sendTranslation(p, true, Translation.KILLMISSION_NAME_SET);
+            }
+            QuestBook.openQuestMissionEditor(p, changes);
+            return true;
+          }
+          ));
+        }
+    );
+  }
+
+  public static MenuData commandId(IMissionState changes) {
+    String id = changes.getCustomString();
+    return new MenuData(
+        new ItemBuilder(Material.NAME_TAG).wrapText(
+            "&7ID: &r&o" + (id.length() > 0 ? id : "-none-"),
+            "",
+            "&e> Click to change the id").get(),
+        event -> {
+          Player p = (Player) event.getWhoClicked();
+
+          p.closeInventory();
+          PlayerTools.promptInput(p, new SinglePrompt("Enter the external command ID to check for. cancel() to abort", (c, s) -> {
+            changes.setCustomString(s);
+            if (changes.apply()) {
+              MessageUtils.sendMessage(p, "set!");
             }
             QuestBook.openQuestMissionEditor(p, changes);
             return true;
