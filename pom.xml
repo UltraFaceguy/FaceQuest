@@ -140,6 +140,14 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>space-faceland-maven</id>
+      <url>https://maven.pkg.jetbrains.space/faceland/p/fl/faceland-maven</url>
+    </repository>
+  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
