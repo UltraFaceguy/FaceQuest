@@ -1,13 +1,12 @@
 package com.questworld.quest;
 
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IQuest;
 import com.questworld.api.event.CancellableEvent;
 import com.questworld.api.event.QuestChangeEvent;
 import com.questworld.util.BitFlag;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 class QuestState extends Quest {
 	private long changeBits = 0;
@@ -52,6 +51,12 @@ class QuestState extends Quest {
 	public void setRewardsLore(String rewardsLore) {
 		super.setRewardsLore(rewardsLore);
 		changeBits |= BitFlag.getBits(Member.REWARDS_LORE);
+	}
+
+	@Override
+	public void setHiddenUntilStarted(boolean hiddenUntilStarted) {
+		super.setHiddenUntilStarted(hiddenUntilStarted);
+		changeBits |= BitFlag.getBits(Member.HIDDEN_UNTIL_STARTED);
 	}
 
 	@Override

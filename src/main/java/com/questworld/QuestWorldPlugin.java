@@ -10,10 +10,13 @@ import com.questworld.listener.MoneyDropListener;
 import com.questworld.listener.PlayerListener;
 import com.questworld.listener.SpawnerListener;
 import com.questworld.util.Log;
+import com.questworld.util.TransientPermissionUtil;
 import java.text.DecimalFormat;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,6 +24,7 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
   private static QuestWorldPlugin _INSTANCE;
   private QuestingImpl api;
+  private static Permission perms = null;
 
   private int autosaveHandle = -1;
   private int questCheckHandle = -1;
@@ -66,6 +70,12 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     new MoneyDropListener(this);
     spawnListener = new SpawnerListener(this);
     new ClickCommand(this);
+
+    setupPermissions();
+
+    for (Player p : Bukkit.getOnlinePlayers()) {
+      TransientPermissionUtil.updateTransientPerms(p);
+    }
   }
 
   public void loadConfigs() {
@@ -111,6 +121,16 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
     getServer().getServicesManager().unregisterAll(this);
     getServer().getScheduler().cancelTasks(this);
+  }
+
+  private boolean setupPermissions() {
+    RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+    perms = rsp.getProvider();
+    return perms != null;
+  }
+
+  public static Permission getPermissions() {
+    return perms;
   }
 
   public SpawnerListener getSpawnListener() {

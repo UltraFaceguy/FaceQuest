@@ -1,10 +1,16 @@
 package com.questworld.listener;
 
-import com.questworld.api.menu.RewardsPrompt;
-import java.util.HashMap;
-import java.util.UUID;
-
-import org.bukkit.Bukkit;
+import com.questworld.GuideBook;
+import com.questworld.QuestingImpl;
+import com.questworld.api.Decaying;
+import com.questworld.api.contract.IMission;
+import com.questworld.api.contract.IPlayerStatus;
+import com.questworld.api.event.CancellableEvent;
+import com.questworld.api.event.GenericPlayerLeaveEvent;
+import com.questworld.api.menu.QuestBook;
+import com.questworld.manager.ProgressTracker;
+import com.questworld.util.AutoListener;
+import com.questworld.util.TransientPermissionUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,20 +24,9 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
-import com.questworld.GuideBook;
-import com.questworld.QuestingImpl;
-import com.questworld.api.Decaying;
-import com.questworld.api.contract.IMission;
-import com.questworld.api.contract.IPlayerStatus;
-import com.questworld.api.event.CancellableEvent;
-import com.questworld.api.event.GenericPlayerLeaveEvent;
-import com.questworld.api.menu.QuestBook;
-import com.questworld.manager.ProgressTracker;
-import com.questworld.util.AutoListener;
-
 public class PlayerListener extends AutoListener {
 
-	private QuestingImpl api;
+	private final QuestingImpl api;
 
 	public PlayerListener(QuestingImpl api) {
 		this.api = api;
@@ -62,6 +57,8 @@ public class PlayerListener extends AutoListener {
 
 		if (api.getPlugin().getConfig().getBoolean("book.on-first-join") && !ProgressTracker.exists(p.getUniqueId()))
 			p.getInventory().addItem(GuideBook.instance().item());
+
+		TransientPermissionUtil.updateTransientPerms(p);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -43,7 +43,7 @@ public interface IPlayerStatus {
 
 	void update();
 
-	String progressString(IQuest quest);
+	String progressString(IQuest quest, float progress);
 
 	String progressString();
 

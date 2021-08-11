@@ -3,19 +3,10 @@ package com.questworld;
 import static com.questworld.QuestWorldPlugin.INT_FORMAT;
 
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
-import me.clip.placeholderapi.PlaceholderAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 
 public class QuestPlaceholders extends PlaceholderExpansion {
-
-  @Override
-  public boolean register() {
-    if (!canRegister()) {
-      return false;
-    }
-    return PlaceholderAPI.registerPlaceholderHook(getIdentifier(), this);
-  }
 
   @Override
   public String getAuthor() {

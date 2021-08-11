@@ -1,10 +1,9 @@
 package com.questworld.api.contract;
 
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-
 import com.questworld.api.annotation.NoImpl;
 import com.questworld.util.BitFlag.BitString;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 @NoImpl
 public interface IQuestState extends IQuest {
@@ -36,6 +35,8 @@ public interface IQuestState extends IQuest {
 	void setLevelRequirement(int levelRequirement);
 
 	void setQuestPoints(int questPoints);
+
+	void setHiddenUntilStarted(boolean hiddenUntilStarted);
 
 	void setEnabled(boolean enabled);
 
@@ -83,7 +84,8 @@ public interface IQuestState extends IQuest {
 		WEIGHT,
 		LEVEL,
 		QUEST_POINTS,
-		REWARDS_LORE
+		REWARDS_LORE,
+		HIDDEN_UNTIL_STARTED
 	}
 
 	boolean hasChange(Member field);

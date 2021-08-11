@@ -86,6 +86,23 @@ public class DeluxeQuestBook {
       }
 
       QuestStatus questStatus = playerStatus.getStatus(quest);
+
+      int maxMissions = quest.getMissions().size();
+      float completedMissions = 0;
+      String waypointerId = "";
+      for (IMission mission : quest.getOrderedMissions()) {
+        if (playerStatus.hasCompletedTask(mission)) {
+          completedMissions++;
+          continue;
+        }
+        completedMissions += (float) playerStatus.getProgress(mission) / mission.getAmount();
+        if (StringUtils.isBlank(mission.getWaypointerId())) {
+          continue;
+        }
+        waypointerId = mission.getWaypointerId();
+        break;
+      }
+
       String statusString;
 
       if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
@@ -95,19 +112,9 @@ public class DeluxeQuestBook {
       } else if (playerStatus.hasFinished(quest)) {
         statusString = QuestWorld.translate(p, Translation.quests_state_completed);
       } else {
-        statusString = playerStatus.progressString(quest);
-      }
-
-      String waypointerId = "";
-      for (IMission mission : quest.getOrderedMissions()) {
-        if (playerStatus.hasCompletedTask(mission)) {
-          continue;
-        }
-        if (StringUtils.isBlank(mission.getWaypointerId())) {
-          continue;
-        }
-        waypointerId = mission.getWaypointerId();
-        break;
+        int percent = (int) (100 * completedMissions / maxMissions);
+        statusString = playerStatus.progressString(quest, completedMissions / maxMissions) + " "
+            + ChatColor.WHITE + percent + "%";
       }
 
       if (StringUtils.isBlank(waypointerId)) {
@@ -122,7 +129,6 @@ public class DeluxeQuestBook {
             event -> {
               if (event.getClick() == ClickType.RIGHT) {
                 setWaypoint((Player) event.getWhoClicked(), finalWaypointerId);
-                p.closeInventory();
               } else {
                 openQuest((Player) event.getWhoClicked(), quest, deluxeCategory, true);
               }
@@ -138,8 +144,7 @@ public class DeluxeQuestBook {
     WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(p, waypointerId);
   }
 
-  public static void openQuest(final Player p, final IQuest quest, final DeluxeCategory category,
-      final boolean back) {
+  public static void openQuest(final Player p, final IQuest quest, final DeluxeCategory category, final boolean back) {
     QuestWorld.getSounds().QUEST_CLICK.playTo(p);
     IPlayerStatus manager = QuestWorld.getPlayerStatus(p);
     manager.update();
@@ -195,8 +200,7 @@ public class DeluxeQuestBook {
         int current = manager.getProgress(mission);
         int total = mission.getAmount();
 
-        String progress = Text
-            .progressBar(current, total, mission.getType().progressString(current, total));
+        String progress = Text.progressBar(current, total, mission.getType().progressString(current, total));
 
         if (StringUtils.isBlank(mission.getWaypointerId())) {
           if (mission.getType() instanceof Manual) {

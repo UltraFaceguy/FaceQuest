@@ -1,12 +1,10 @@
 package com.questworld.api.contract;
 
+import com.questworld.api.annotation.NoImpl;
 import java.util.Collection;
 import java.util.List;
-
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import com.questworld.api.annotation.NoImpl;
 
 @NoImpl
 public interface IQuest extends DataObject {
@@ -68,6 +66,8 @@ public interface IQuest extends DataObject {
 	int getModifiedLevelRequirement();
 
 	int getQuestPoints();
+
+	boolean isHiddenUntilStarted();
 
 	ItemStack generateRewardInfo();
 }

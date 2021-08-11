@@ -11,8 +11,8 @@ import com.questworld.api.event.CancellableEvent;
 import com.questworld.api.event.QuestCompleteEvent;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
-import com.tealcube.minecraft.bukkit.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.io.IOException;
@@ -56,6 +56,7 @@ class Quest extends UniqueObject implements IQuestState {
   private int weight = 0;
   private int levelRequirement = 0;
   private int questPoints = 0;
+  private boolean hiddenUntilStarted = false;
   private double xp = 0;
 
   // Internal
@@ -91,6 +92,7 @@ class Quest extends UniqueObject implements IQuestState {
     weight = source.weight;
     levelRequirement = source.levelRequirement;
     questPoints = source.questPoints;
+    hiddenUntilStarted = source.hiddenUntilStarted;
   }
 
   protected void copyTo(Quest dest) {
@@ -425,6 +427,10 @@ class Quest extends UniqueObject implements IQuestState {
     return questPoints;
   }
 
+  public boolean isHiddenUntilStarted() {
+    return hiddenUntilStarted;
+  }
+
   public void setMoney(int money) {
     this.money = money;
   }
@@ -443,6 +449,10 @@ class Quest extends UniqueObject implements IQuestState {
 
   public void setQuestPoints(int questPoints) {
     this.questPoints = questPoints;
+  }
+
+  public void setHiddenUntilStarted(boolean hiddenUntilStarted) {
+    this.hiddenUntilStarted = hiddenUntilStarted;
   }
 
   @Override
@@ -475,7 +485,7 @@ class Quest extends UniqueObject implements IQuestState {
     if (StringUtils.isNotBlank(rewardsLore)) {
       lore.addAll(Arrays.asList(rewardsLore.split("\\|")));
     }
-    ItemStackExtensionsKt.setLore(info, TextUtils.color(lore));
+    TextUtils.setLore(info, TextUtils.color(lore));
     ItemStackExtensionsKt.setCustomModelData(info, 50);
     return info;
   }

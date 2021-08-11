@@ -4,7 +4,7 @@ import com.questworld.api.QuestWorld;
 import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
 import com.questworld.api.contract.IQuest;
 import com.questworld.util.Text;
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.List;
@@ -85,11 +85,11 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     if (player != null) {
       int questPoints = QuestWorld.getAPI().getPlayerStatus(player).getQuestPoints();
       List<String> lore = new ArrayList<>();
-      for (String s : ItemStackExtensionsKt.getLore(stack)) {
+      for (String s : TextUtils.getLore(stack)) {
         lore.add(s.replace("{qp}", Integer.toString(questPoints))
             .replace("{mqp}", Integer.toString(QuestWorld.getAPI().getMaxQuestPoints())));
       }
-      ItemStackExtensionsKt.setLore(stack, lore);
+      TextUtils.setLore(stack, lore);
     }
     return stack;
   }
@@ -101,7 +101,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     lore.add("&7Click to view quests that");
     lore.add("&7you can start!");
     lore = TextUtils.color(lore);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 
@@ -112,7 +112,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     lore.add("&7Click to view quests that");
     lore.add("&7you have already started!");
     lore = TextUtils.color(lore);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 
@@ -123,7 +123,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     lore.add("&7Click to view quests that");
     lore.add("&7can be repeatedly done!");
     lore = TextUtils.color(lore);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 
@@ -135,7 +135,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     lore.add("&7have completed, but have");
     lore.add("&7unclaimed items!");
     lore = TextUtils.color(lore);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 
@@ -147,7 +147,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
     lore.add("&7Click to check quests that");
     lore.add("&7you have already done!");
     lore = TextUtils.color(lore);
-    ItemStackExtensionsKt.setLore(stack, lore);
+    TextUtils.setLore(stack, lore);
     return stack;
   }
 }

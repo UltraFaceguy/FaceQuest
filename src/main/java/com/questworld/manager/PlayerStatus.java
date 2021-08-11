@@ -18,8 +18,10 @@ import com.questworld.api.menu.RewardsPrompt;
 import com.questworld.quest.WeightComparator;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
-import com.tealcube.minecraft.bukkit.TextUtils;
+import com.questworld.util.TransientPermissionUtil;
+import com.tealcube.minecraft.bukkit.facecore.utilities.AdvancedActionBarUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
@@ -404,19 +406,12 @@ public class PlayerStatus implements IPlayerStatus {
   }
 
   @Override
-  public String progressString(IQuest quest) {
+  public String progressString(IQuest quest, float progress) {
     QuestStatus status = getStatus(quest);
-    if (status == QuestStatus.FINISHED || status == QuestStatus.ON_COOLDOWN) {
+    if (status == QuestStatus.FINISHED || status == QuestStatus.ON_COOLDOWN || progress >= 0.9998) {
       return Text.progressBar(10, 10, StringUtils.EMPTY);
     }
-    int progress = 0;
-    int max = 0;
-    for (IMission mission : quest.getMissions()) {
-      max += mission.getCustomInt();
-      progress += mission.getAmount();
-    }
-
-    return Text.progressBar(progress, max, StringUtils.EMPTY);
+    return Text.progressBar(progress, StringUtils.EMPTY);
   }
 
   @Override
@@ -465,21 +460,26 @@ public class PlayerStatus implements IPlayerStatus {
     }
   }
 
-  private static void updateQuestWaypoint(IMission currentTask, Player player) {
+  private static void updateQuestWaypoint(IMission task, Player player) {
+    if (StringUtils.isNotBlank(task.getWaypointerId())) {
+      WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(player, task.getWaypointerId());
+    }
+  }
+
+  public static IMission getNextTask(IMission currentTask) {
+    if (!currentTask.getQuest().getOrdered()) {
+      return null;
+    }
     Iterator iterator = currentTask.getQuest().getOrderedMissions().iterator();
     while (iterator.hasNext()) {
       IMission task = (IMission) iterator.next();
       if (currentTask == task) {
         if (iterator.hasNext()) {
-          IMission nextTask = (IMission) iterator.next();
-          if (StringUtils.isNotBlank(nextTask.getWaypointerId())) {
-            WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(player,
-                nextTask.getWaypointerId());
-          }
+          return (IMission) iterator.next();
         }
-        break;
       }
     }
+    return null;
   }
 
   private void setSingleProgress(IMission task, int amount) {
@@ -495,19 +495,22 @@ public class PlayerStatus implements IPlayerStatus {
     if (task.getActionBarUpdates()) {
       String actionBar;
       if (complete) {
-        actionBar = "&2[Task Complete!] " + ChatColor.stripColor(task.getQuest().getName());
+        actionBar = "&a[Task Complete!] " + ChatColor.stripColor(task.getQuest().getName());
       } else {
-        actionBar = "&b[Task] " + ChatColor.stripColor(task.getQuest().getName()) + " " + Text
-            .progressBar(getProgress(task), task.getAmount(), StringUtils.EMPTY);
+        actionBar = "&b[Task] " + ChatColor.stripColor(task.getQuest().getName()) + " " +
+            Text.progressBar(getProgress(task), task.getAmount(), StringUtils.EMPTY) + " " + ChatColor.AQUA +
+            amount + "/" + task.getAmount();
       }
       Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-          () -> MessageUtils.sendActionBar((Player) getPlayer(), actionBar), 2L);
+          () -> AdvancedActionBarUtil.addOverrideMessage((Player) getPlayer(), "QUEST", actionBar, 20), 2L);
     }
 
     if (complete) {
       Bukkit.getPluginManager().callEvent(new MissionCompletedEvent(task));
       sendDialogue(this, task, task.getDialogue().iterator());
     }
+
+    TransientPermissionUtil.updateTransientPerms(getPlayer(), this, task.getQuest());
   }
 
   public static void sendDialogue(PlayerStatus status, IMission task, Iterator<String> dialogue) {
@@ -522,12 +525,13 @@ public class PlayerStatus implements IPlayerStatus {
             () -> sendDialogue(status, task, dialogue), 50L);
       } else {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-        PlayerTools.sendTranslation(player, false, Translation.NOTIFY_COMPLETED,
-            task.getQuest().getName(), task.getText());
+        PlayerTools
+            .sendTranslation(player, false, Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
         status.update();
-        if (task.getQuest().getOrdered()) {
-          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(), () ->
-              updateQuestWaypoint(task, player), 50L);
+        IMission nextTask = getNextTask(task);
+        if (nextTask != null) {
+          MessageUtils.sendMessage(player, "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
+          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(), () -> updateQuestWaypoint(nextTask, player), 50L);
         }
       }
     });
@@ -565,6 +569,7 @@ public class PlayerStatus implements IPlayerStatus {
       }
     }
     updateQuestPoints();
+    TransientPermissionUtil.updateTransientPerms(getPlayer(), this, quest);
   }
 
   public ProgressTracker getTracker() {

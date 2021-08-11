@@ -2,20 +2,6 @@ package com.questworld.api.menu;
 
 import static com.questworld.util.PlayerTools.getStrifeExpFromPercentage;
 
-import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
-import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.metadata.MetadataValue;
-
 import com.questworld.Constants;
 import com.questworld.api.Manual;
 import com.questworld.api.MissionType;
@@ -35,6 +21,19 @@ import com.questworld.util.ItemBuilder;
 import com.questworld.util.ItemBuilder.Proto;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 
 public class QuestBook {
 
@@ -157,8 +156,7 @@ public class QuestBook {
                   String.valueOf(finishedCount),
                   String.valueOf(playerStatus.countQuests(category, QuestStatus.AVAILABLE)),
                   String.valueOf(playerStatus.countQuests(category, QuestStatus.ON_COOLDOWN)),
-                  String.valueOf(
-                      playerStatus.countQuests(category, QuestStatus.REWARD_CLAIMABLE)),
+                  String.valueOf(playerStatus.countQuests(category, QuestStatus.REWARD_CLAIMABLE)),
                   Text.progressBar(finishedCount, questCount, StringUtils.EMPTY))).split("\n"))
                   .get(),
               event -> {
@@ -261,7 +259,7 @@ public class QuestBook {
 
         view.addButton(quest.getID(),
             new ItemBuilder(quest.getItem())
-                .wrapText(quest.getName(), "", playerStatus.progressString(quest), "",
+                .wrapText(quest.getName(), "", playerStatus.progressString(quest, 1), "",
                     "&7" + playerStatus.getProgress(quest) + "/" + quest.getMissions().size()
                         + QuestWorld.translate(p, Translation.quests_tasks_completed),
                     (extra == null) ? null : "", extra)
@@ -365,12 +363,11 @@ public class QuestBook {
         ItemBuilder entryItem = new ItemBuilder(mission.getDisplayItem());
         int current = manager.getProgress(mission);
         int total = mission.getAmount();
-        String progress = Text
-            .progressBar(current, total, mission.getType().progressString(current, total));
+        String progress = Text.progressBar(current, total, mission.getType().progressString(current, total));
+        progress += " " + ChatColor.WHITE + current + "/" + total;
 
         if (mission.getType() instanceof Manual) {
-          entryItem.wrapText(mission.getText(), "", progress, "",
-              ((Manual) mission.getType()).getLabel());
+          entryItem.wrapText(mission.getText(), "", progress, "", ((Manual) mission.getType()).getLabel());
         } else {
           entryItem.wrapText(mission.getText(), "", progress);
         }
@@ -643,9 +640,7 @@ public class QuestBook {
 
     menu.put(14, new ItemBuilder(Material.GRASS)
         .wrapText("&7World blacklist", "", "&e> Click open world selector")
-        .get(), event -> {
-      openWorldEditor((Player) event.getWhoClicked(), category);
-    });
+        .get(), event -> openWorldEditor((Player) event.getWhoClicked(), category));
 
     menu.put(17, new ItemBuilder(Material.RED_WOOL)
             .wrapText("&4Reset progress", "",
@@ -974,6 +969,16 @@ public class QuestBook {
 
     menu.put(22, new ItemBuilder(Material.GRASS).wrapText("&7World blacklist", "", "&e> Click to open world selector").get(), event -> openWorldSelector((Player) event.getWhoClicked(), quest));
 
+    menu.put(23, new ItemBuilder(Material.MAP)
+        .wrapText("&aHide Until Started: " + (!quest.isHiddenUntilStarted() ? "&2&l\u2714" : "&4&l\u2718"),
+            "&7Should quest be hidden until a mission is done?",
+            "&e> Click To Toggle")
+        .get(), event -> {
+          changes.setHiddenUntilStarted(!changes.isHiddenUntilStarted());
+          changes.apply();
+          openQuestEditor((Player) event.getWhoClicked(), quest);
+        });
+
     String xpDisplay;
     if (quest.getXP() >= 0) {
       xpDisplay = Integer.toString((int) quest.getXP());
@@ -1030,6 +1035,15 @@ public class QuestBook {
       changes.setEnabled(!quest.isEnabled());
       changes.apply();
       openQuestEditor((Player) event.getWhoClicked(), quest);
+    });
+
+    menu.put(33, new ItemBuilder(Material.CHEST).wrapText(
+        "&b[Generate Permissions]",
+        "&e> Click to send transient perms to chat, to do whatever"
+        ).get(), event -> {
+          MessageUtils.sendMessage(event.getWhoClicked(), "QS." + quest.getUniqueId() + ".perm");
+          MessageUtils.sendMessage(event.getWhoClicked(), "QC." + quest.getUniqueId() + ".perm");
+          QuestWorld.getSounds().EDITOR_CLICK.playTo((Player) event.getWhoClicked());
     });
 
     menu.put(35, new ItemBuilder(Material.BARRIER)
