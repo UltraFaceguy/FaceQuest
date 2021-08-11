@@ -1,16 +1,15 @@
-# QuestWorld2
+# QuestWorld2 [FaceQuest]
 GUI based questing plugin for Bukkit based Minecraft servers
+
+*NOW ADAPATED FOR FACELAND, USE AT YOUR OWN RISK*
 
 Extensions at [QuestWorld-Extensions](https://github.com/ezeiger92/QuestWorld-Extensions)
 Legacy adapter at [QuestWorld-Legacy](https://github.com/ezeiger92/QuestWorld-Legacy)
 
 Supported server versions:
-- Craftbukkit 1.13.2, 1.12.2
-- Spigot 1.13.2, 1.12.2
-
-Any other versions may recieve limited support. Versions earlier than 1.12 are known to not work.
+- Paper 1.17.1
 
 Built using:
-- Java 8
-- spigot-api 1.12.2-R0.1-SNAPSHOT
-- VaultAPI 1.6
+- Java 16
+- paper-api 1.17.1-R0.1-SNAPSHOT
+- VaultAPI 1.7
