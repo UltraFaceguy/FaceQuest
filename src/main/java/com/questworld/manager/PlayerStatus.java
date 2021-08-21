@@ -23,6 +23,8 @@ import com.tealcube.minecraft.bukkit.facecore.utilities.AdvancedActionBarUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils.ToastStyle;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.ArrayList;
@@ -40,14 +42,16 @@ import land.face.waypointer.WaypointerPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 
 public class PlayerStatus implements IPlayerStatus {
 
-  private WeightComparator weightComparator = new WeightComparator();
+  private final WeightComparator weightComparator = new WeightComparator();
   private int questPoints = 0;
   private long questPointTimestamp = 0;
   private boolean inDialogue = false;
@@ -308,7 +312,14 @@ public class PlayerStatus implements IPlayerStatus {
             TitleUtils.sendTitle(p,
                 TextUtils.color("&bQUEST COMPLETE!"),
                 TextUtils.color("&bCompleted: &f" + ChatColor.stripColor(quest.getName())));
-            p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
+            if (quest.getQuestPoints() > 0) {
+              ToastUtils.sendToast(p,
+                  ChatColor.AQUA + "+" + quest.getQuestPoints() + "QP!" + ChatColor.GRAY + " ("
+                      + questPoints + " Total)", new ItemStack(Material.NETHER_STAR),
+                  ToastStyle.CHALLENGE);
+            } else {
+              p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
+            }
             tracker.setQuestFinished(quest, true);
             if (!quest.getAutoClaimed()) {
               tracker.setQuestStatus(quest, QuestStatus.REWARD_CLAIMABLE);
@@ -462,7 +473,8 @@ public class PlayerStatus implements IPlayerStatus {
 
   private static void updateQuestWaypoint(IMission task, Player player) {
     if (StringUtils.isNotBlank(task.getWaypointerId())) {
-      WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(player, task.getWaypointerId());
+      WaypointerPlugin.getInstance().getWaypointManager()
+          .setWaypoint(player, task.getWaypointerId());
     }
   }
 
@@ -498,11 +510,13 @@ public class PlayerStatus implements IPlayerStatus {
         actionBar = "&a[Task Complete!] " + ChatColor.stripColor(task.getQuest().getName());
       } else {
         actionBar = "&b[Task] " + ChatColor.stripColor(task.getQuest().getName()) + " " +
-            Text.progressBar(getProgress(task), task.getAmount(), StringUtils.EMPTY) + " " + ChatColor.AQUA +
+            Text.progressBar(getProgress(task), task.getAmount(), StringUtils.EMPTY) + " "
+            + ChatColor.AQUA +
             amount + "/" + task.getAmount();
       }
       Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-          () -> AdvancedActionBarUtil.addOverrideMessage((Player) getPlayer(), "QUEST", actionBar, 20), 2L);
+          () -> AdvancedActionBarUtil.addOverrideMessage((Player) getPlayer(), "QUEST", actionBar,
+              20), 2L);
     }
 
     if (complete) {
@@ -526,12 +540,16 @@ public class PlayerStatus implements IPlayerStatus {
       } else {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
         PlayerTools
-            .sendTranslation(player, false, Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
+            .sendTranslation(player, false, Translation.NOTIFY_COMPLETED, task.getQuest().getName(),
+                task.getText());
         status.update();
         IMission nextTask = getNextTask(task);
         if (nextTask != null) {
-          MessageUtils.sendMessage(player, "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
-          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(), () -> updateQuestWaypoint(nextTask, player), 50L);
+          MessageUtils.sendMessage(player,
+              "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
+          Bukkit.getScheduler()
+              .runTaskLater(QuestWorld.getPlugin(), () -> updateQuestWaypoint(nextTask, player),
+                  50L);
         }
       }
     });
