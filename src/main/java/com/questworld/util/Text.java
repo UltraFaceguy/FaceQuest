@@ -151,7 +151,7 @@ public final class Text {
   public static String niceName(String input) {
     input = input.replace('_', ' ').trim().toLowerCase(Locale.getDefault());
 
-    StringBuffer sb = new StringBuffer(input.length());
+    StringBuilder sb = new StringBuilder(input.length());
 
     Matcher m = firstLetter.matcher(input);
     while (m.find()) {
@@ -172,7 +172,7 @@ public final class Text {
 
   private static final String[] progress_colors = {"&e", "&e", "&e", "&e", "&e", "&2"};
 
-  private static final String progress_bar = "▌▌▌▌▌▌▌▌▌▌▌▌▌▌▌";
+  private static final String progress_bar = "▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801";
 
   public static String progressBar(float current, float total, @Nullable("defaults to xy%") String append) {
     return progressBar(current / total, append);
@@ -182,8 +182,8 @@ public final class Text {
     int barSize = progress_bar.length();
     int length = (int) (percent * barSize);
 
-    return colorize("&8▌" + progress_colors[(int) (percent * 5)], progress_bar.substring(barSize - length), "&0",
-        progress_bar.substring(length) + "&8▌");
+    return colorize("&8▌\uF801" + progress_colors[(int) (percent * 5)], progress_bar.substring(barSize - length), "&0",
+        progress_bar.substring(length ) + "&8▌");
   }
 
   public static String itemName(ItemStack stack) {

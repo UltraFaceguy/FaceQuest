@@ -15,12 +15,12 @@ import com.questworld.api.menu.MissionButton;
 
 public class JoinMission extends MissionType implements Listener {
 	public JoinMission() {
-		super("JOIN", true, new ItemStack(Material.GOLD_NUGGET));
+		super("JOIN", true, 1005);
 	}
 
 	@Override
 	public ItemStack userDisplayItem(IMission instance) {
-		return new ItemStack(Material.CLOCK);
+		return instance.getItem();
 	}
 
 	@Override

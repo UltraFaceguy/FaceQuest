@@ -36,7 +36,9 @@ public class ItemBuilder {
 	 * @author Erik Zeiger
 	 */
 	public static enum Proto {
-		MAP_BACK(new ItemBuilder(Material.MAP).flagAll().display(QuestWorld.translate(Translation.button_back_general))
+		MAP_BACK(new ItemBuilder(Material.PAPER)
+				.modelData(997)
+				.flagAll().display(QuestWorld.translate(Translation.button_back_general))
 				.get()),;
 		private ItemStack item;
 
@@ -135,7 +137,7 @@ public class ItemBuilder {
 	 */
 	public ItemBuilder(ItemStack stack) {
 		resultStack = stack.clone();
-
+		resultStack.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
 		if (stack.getType() == Material.AIR)
 			type(Material.BARRIER);
 	}
@@ -147,7 +149,15 @@ public class ItemBuilder {
 	 */
 	public ItemBuilder(Material type) {
 		resultStack = new ItemStack(type);
+		resultStack.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
+		if (type == Material.AIR)
+			type(Material.BARRIER);
+	}
 
+	public ItemBuilder(Material type, int modelData) {
+		resultStack = new ItemStack(type);
+		ItemStackExtensionsKt.setCustomModelData(resultStack, modelData);
+		resultStack.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
 		if (type == Material.AIR)
 			type(Material.BARRIER);
 	}
@@ -174,11 +184,23 @@ public class ItemBuilder {
 	 * Sets stack amount
 	 *
 	 * @param amount Target size of stack
-	 * 
+	 *
 	 * @return this, for chaining
 	 */
 	public @Mutable ItemBuilder amount(int amount) {
 		resultStack.setAmount(amount);
+		return this;
+	}
+
+	/**
+	 * Sets stack amount
+	 *
+	 * @param amount Target size of stack
+	 *
+	 * @return this, for chaining
+	 */
+	public @Mutable ItemBuilder modelData(int amount) {
+		ItemStackExtensionsKt.setCustomModelData(resultStack, amount);
 		return this;
 	}
 

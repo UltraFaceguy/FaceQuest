@@ -2,6 +2,7 @@ package com.questworld.api.menu;
 
 import java.util.function.Consumer;
 
+import org.bukkit.Material;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -55,7 +56,11 @@ public class Panel {
 	}
 
 	public void build(Menu menu, int offset, int activeSize) {
-		for (int i = 0; i < activeSize; ++i)
+		for (int i = 0; i < activeSize; ++i) {
+			if (items[i] == null) {
+				continue;
+			}
 			menu.put(i + offset, items[i], buttons[i]);
+		}
 	}
 }

@@ -29,8 +29,7 @@ public class DeluxeCategoryPicker implements InventoryHolder {
   private static final ItemStack rewardQuestsItem = buildRewardItem();
   private static final ItemStack doneQuestsItem = buildCompletedItem();
 
-  DeluxeCategoryPicker(Map<DeluxeCategory, List<IQuest>> quests, Player player,
-      String title) {
+  DeluxeCategoryPicker(Map<DeluxeCategory, List<IQuest>> quests, Player player, String title) {
     this.quests = quests;
     inv = Bukkit.createInventory(this, InventoryType.HOPPER, Text.colorize(title));
 
@@ -50,25 +49,16 @@ public class DeluxeCategoryPicker implements InventoryHolder {
 
   public void openCategory(Player p, int slot) {
     switch (slot) {
-      case 0:
-        DeluxeQuestBook.openCategory(p, DeluxeCategory.OPEN_QUESTS,
-            quests.get(DeluxeCategory.OPEN_QUESTS), true);
-        return;
-      case 1:
-        DeluxeQuestBook.openCategory(p, DeluxeCategory.UNFINISHED_QUESTS,
-            quests.get(DeluxeCategory.UNFINISHED_QUESTS), true);
-        return;
-      case 2:
-        DeluxeQuestBook.openCategory(p, DeluxeCategory.DAILY_QUESTS,
-            quests.get(DeluxeCategory.DAILY_QUESTS), true);
-        return;
-      case 3:
-        DeluxeQuestBook.openCategory(p, DeluxeCategory.UNCLAIMED_REWARDS,
-            quests.get(DeluxeCategory.UNCLAIMED_REWARDS), true);
-        return;
-      case 4:
-        DeluxeQuestBook.openCategory(p, DeluxeCategory.COMPLETED_QUESTS,
-            quests.get(DeluxeCategory.COMPLETED_QUESTS), true);
+      case 0 -> DeluxeQuestBook.openCategory(p, DeluxeCategory.OPEN_QUESTS,
+          quests.get(DeluxeCategory.OPEN_QUESTS), true, false);
+      case 1 -> DeluxeQuestBook.openCategory(p, DeluxeCategory.UNFINISHED_QUESTS,
+          quests.get(DeluxeCategory.UNFINISHED_QUESTS), true, false);
+      case 2 -> DeluxeQuestBook.openCategory(p, DeluxeCategory.DAILY_QUESTS,
+          quests.get(DeluxeCategory.DAILY_QUESTS), true, false);
+      case 3 -> DeluxeQuestBook.openCategory(p, DeluxeCategory.UNCLAIMED_REWARDS,
+          quests.get(DeluxeCategory.UNCLAIMED_REWARDS), true, false);
+      case 4 -> DeluxeQuestBook.openCategory(p, DeluxeCategory.COMPLETED_QUESTS,
+          quests.get(DeluxeCategory.COMPLETED_QUESTS), true, false);
     }
   }
 

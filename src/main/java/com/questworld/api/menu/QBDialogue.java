@@ -154,7 +154,7 @@ public class QBDialogue {
           }, true);
     }
     pager.setBackButton(" &3Mission editor", event -> QuestBook.openQuestMissionEditor(p, mission));
-    pager.build(menu, p);
+    pager.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -186,7 +186,7 @@ public class QBDialogue {
       index++;
     }
     pager.setBackButton(" &3Mission editor", event -> QuestBook.openQuestMissionEditor(p, mission));
-    pager.build(menu, p);
+    pager.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -338,7 +338,7 @@ public class QBDialogue {
         QuestBook.openCategoryEditor(p, (ICategory) quest);
       }
     });
-    pager.build(menu, p);
+    pager.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -387,7 +387,7 @@ public class QBDialogue {
       }
     }
     pager.setBackButton(" &3Categories", event -> openRequirementCategories(p, q));
-    pager.build(menu, p);
+    pager.build(menu, p, true);
     menu.openFor(p);
   }
 }

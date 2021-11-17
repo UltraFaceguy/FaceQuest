@@ -1,8 +1,10 @@
 package com.questworld.api;
 
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 import com.questworld.api.annotation.Control;
@@ -15,16 +17,19 @@ import com.questworld.util.Log;
 import com.questworld.util.Text;
 
 public abstract class MissionType {
-	private String name;
-	private ItemStack selectorItem;
-	private boolean supportsTimeframes;
-	private Map<Integer, MenuData> menuData;
 
-	public MissionType(String name, boolean supportsTimeframes, ItemStack item) {
+	private String name;
+	private final boolean supportsTimeframes;
+	private final Map<Integer, MenuData> menuData;
+
+	private final ItemStack selectorItem;
+
+	public MissionType(String name, boolean supportsTimeframes, int modelData) {
 		Log.fine("MissionType - Creating: " + name);
 		this.name = name;
-		this.selectorItem = item;
 		this.supportsTimeframes = supportsTimeframes;
+		selectorItem = new ItemStack(Material.PAPER);
+		ItemStackExtensionsKt.setCustomModelData(selectorItem, modelData);
 		menuData = new HashMap<>();
 	}
 
@@ -79,10 +84,6 @@ public abstract class MissionType {
 
 	@Control
 	public void validate(IMissionState instance) {
-	}
-
-	protected final void setSelectorItem(ItemStack material) {
-		selectorItem = material.clone();
 	}
 
 	public String progressString(int current, int total) {

@@ -167,7 +167,7 @@ public class QuestBook {
         }
       }
     }
-    view.build(menu, p);
+    view.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -218,32 +218,27 @@ public class QuestBook {
       String[] keys;
 
       switch (playerStatus.getStatus(quest)) {
-        case LOCKED_WORLD:
+        case LOCKED_WORLD -> {
           translation = Translation.LOCKED_WORLD;
           keys = new String[]{p.getWorld().getName()};
-          break;
-
-        case LOCKED_NO_PERM: {
+        }
+        case LOCKED_NO_PERM -> {
           String[] parts = quest.getPermission().split(" ", 2);
           translation = Translation.LOCKED_NO_PERM;
           keys = new String[]{parts[0], parts[parts.length - 1]};
-          break;
         }
-
-        case LOCKED_PARENT:
+        case LOCKED_PARENT -> {
           translation = Translation.LOCKED_PARENT;
           keys = new String[]{parent.getName()};
-          break;
-
-        case LOCKED_LEVEL:
+        }
+        case LOCKED_LEVEL -> {
           translation = Translation.LOCKED_LEVEL;
           keys = new String[]{Integer.toString(quest.getLevelRequirement())};
-          break;
-
-        default:
+        }
+        default -> {
           translation = null;
           keys = null;
-          break;
+        }
       }
 
       if (translation == null) {
@@ -274,7 +269,7 @@ public class QuestBook {
             null, false);
       }
     }
-    view.build(menu, p);
+    view.build(menu, p, false);
     menu.openFor(p);
   }
 
@@ -327,7 +322,7 @@ public class QuestBook {
             (manager.getCooldownEnd(quest) - System.currentTimeMillis() + 59999) / 60 / 1000;
         cooldown = Text.timeFromNum(remaining) + " remaining";
       }
-      view.addFrameButton(8, new ItemBuilder(Material.CLOCK)
+      view.addFrameButton(8, new ItemBuilder(Material.PAPER).modelData(994)
               .wrapText(QuestWorld.translate(p, Translation.quests_display_cooldown), "",
                   "&b" + cooldown).get(),
           null, false);
@@ -417,7 +412,7 @@ public class QuestBook {
       slot++;
     }
 
-    view.build(menu, p);
+    view.build(menu, p, false);
     menu.openFor(p);
   }
 
@@ -476,7 +471,7 @@ public class QuestBook {
       }
     }
 
-    view.build(menu, p);
+    view.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -513,10 +508,7 @@ public class QuestBook {
 
         }
 
-        for (int k = 0; k < 3; ++k) {
-          lines[k + j] = lore[k + 1];
-        }
-
+        System.arraycopy(lore, 1, lines, j, 3);
         lore = lines;
       }
 
@@ -533,7 +525,7 @@ public class QuestBook {
       }
     }
 
-    view.build(menu, p);
+    view.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -555,11 +547,13 @@ public class QuestBook {
         .wrapText(category.getName(), "", "&e> Click to set the display item").get(), event -> {
       Player p2 = (Player) event.getWhoClicked();
       ItemStack hand = p2.getInventory().getItemInMainHand();
-      if (hand != null) {
+      if (hand == null || hand.getType() == Material.AIR) {
+        changes.setItem(new ItemStack(Material.WRITABLE_BOOK));
+      } else {
         changes.setItem(hand);
-        changes.apply();
-        openCategoryEditor(p2, category);
       }
+      changes.apply();
+      openCategoryEditor(p2, category);
     });
 
     menu.put(10, new ItemBuilder(Material.NAME_TAG)
@@ -713,7 +707,7 @@ public class QuestBook {
       }
     }
 
-    view.build(menu, p);
+    view.build(menu, p, true);
     menu.openFor(p);
   }
 
@@ -734,12 +728,13 @@ public class QuestBook {
         .get(), event -> {
       Player p2 = (Player) event.getWhoClicked();
       ItemStack mainItem = p2.getInventory().getItemInMainHand();
-      if (mainItem != null) {
+      if (mainItem == null || mainItem.getType() == Material.AIR) {
+        changes.setItem(new ItemStack(Material.WRITABLE_BOOK));
+      } else {
         changes.setItem(mainItem);
-        changes.apply();
-
-        openQuestEditor(p2, quest);
       }
+      changes.apply();
+      openQuestEditor(p2, quest);
     });
 
     menu.put(10,
@@ -1196,7 +1191,7 @@ public class QuestBook {
           }, false);
       ++i;
     }
-    view.build(menu, p);
+    view.build(menu, p, true);
 
     menu.openFor(p);
   }

@@ -1,13 +1,5 @@
 package com.questworld.extension.builtin;
 
-import org.bukkit.Material;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.inventory.ItemStack;
-
 import com.questworld.api.Decaying;
 import com.questworld.api.MissionType;
 import com.questworld.api.QuestWorld;
@@ -16,10 +8,16 @@ import com.questworld.api.contract.IMissionState;
 import com.questworld.api.contract.MissionEntry;
 import com.questworld.api.menu.MissionButton;
 import com.questworld.util.EntityTools;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class KillMission extends MissionType implements Listener, Decaying {
 	public KillMission() {
-		super("KILL", true, new ItemStack(Material.IRON_SWORD));
+		super("KILL", true, 1002);
 	}
 
 	@Override

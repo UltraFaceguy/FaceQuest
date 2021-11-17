@@ -28,7 +28,7 @@ public class UnknownMission extends MissionType {
 	}
 
 	private UnknownMission(String name) {
-		super(name, false, new ItemStack(Material.BARRIER));
+		super(name, false, 998);
 	}
 
 	@Override

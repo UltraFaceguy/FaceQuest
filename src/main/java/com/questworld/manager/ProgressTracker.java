@@ -46,14 +46,14 @@ public class ProgressTracker implements Reloadable {
 	public void onSave() {
 		try {
 			config.save(configFile);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	@Override
 	public void onReload() {
+
 	}
 
 	@Override

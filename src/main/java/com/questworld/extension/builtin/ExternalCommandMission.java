@@ -11,12 +11,12 @@ import org.bukkit.inventory.ItemStack;
 public class ExternalCommandMission extends MissionType implements Listener {
 
   public ExternalCommandMission() {
-    super("EXTERNAL_COMMAND", true, new ItemStack(Material.COMMAND_BLOCK));
+    super("EXTERNAL_COMMAND", true, 1006);
   }
 
   @Override
   public ItemStack userDisplayItem(IMission instance) {
-    return new ItemStack(Material.CLOCK);
+    return instance.getItem();
   }
 
   @Override

@@ -9,9 +9,7 @@ import java.util.regex.Pattern;
 
 import land.face.strife.StrifePlugin;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationAbandonedEvent;
@@ -28,11 +26,9 @@ import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import com.questworld.Constants;
 import com.questworld.api.QuestWorld;
 import com.questworld.api.Translation;
 import com.questworld.api.Translator;
-import com.questworld.api.event.GenericPlayerLeaveEvent;
 
 public class PlayerTools {
 
@@ -220,11 +216,6 @@ public class PlayerTools {
 				else
 					con.abandon();
 			}
-		}
-
-		@EventHandler
-		public void onLeave(GenericPlayerLeaveEvent event) {
-			con.abandon();
 		}
 
 		@Override

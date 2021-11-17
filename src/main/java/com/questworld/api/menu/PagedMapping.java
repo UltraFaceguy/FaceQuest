@@ -1,21 +1,19 @@
 package com.questworld.api.menu;
 
+import com.questworld.Constants;
+import com.questworld.api.QuestWorld;
+import com.questworld.api.Translation;
+import com.questworld.util.ItemBuilder;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.Stack;
 import java.util.function.Consumer;
-
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.Metadatable;
-
-import com.questworld.Constants;
-import com.questworld.api.QuestWorld;
-import com.questworld.api.Translation;
-import com.questworld.util.ItemBuilder;
 
 public class PagedMapping {
 	private final ArrayList<Panel> panels = new ArrayList<>(1);
@@ -24,7 +22,6 @@ public class PagedMapping {
 	private final int pageSize;
 
 	private int currentPage = 0;
-	private int activeSize;
 	private String backLabel = "";
 	private Consumer<InventoryClickEvent> backButton = null;
 
@@ -60,7 +57,6 @@ public class PagedMapping {
 	public PagedMapping(int cellsPerPanel, int minDisplay) {
 		pageSize = cellsPerPanel;
 		panels.add(new Panel(pageSize));
-		activeSize = minDisplay;
 	}
 
 	public PagedMapping(int cellsPerPanel) {
@@ -89,12 +85,9 @@ public class PagedMapping {
 	}
 
 	private Panel findPanel(int index) {
-		activeSize = Math.max(1 + (index % pageSize), activeSize);
-
 		index /= pageSize;
 		while (panels.size() <= index)
 			panels.add(new Panel(pageSize));
-
 		return panels.get(index);
 	}
 
@@ -119,48 +112,57 @@ public class PagedMapping {
 		} : button);
 	}
 
-	public void build(Menu menu, Player p) {
+	public void build(Menu menu, Player p, boolean alwaysShowPages) {
 		int page = popPage(p);
 		if (page >= panels.size()) {
 			page = 0;
 		}
-
-		build(menu, page);
+		build(menu, page, alwaysShowPages);
 	}
 	
 	public int getCurrentPage() {
 		return currentPage;
 	}
 
-	private void build(Menu menu, int page) {
+	private void build(Menu menu, int page, boolean alwaysShowPages) {
 		currentPage = page;
 
-		panels.get(page).build(menu, 9, activeSize);
+		for (int i = 0; i < menu.getInventory().getSize(); i++) {
+			menu.getInventory().setItem(i, DeluxeQuestBook.blankSlot.clone());
+		}
 
-		String[] lines = QuestWorld
-				.translate(Translation.NAV_ITEM, String.valueOf(page + 1), String.valueOf(panels.size()),
+		panels.get(page).build(menu, 9, pageSize);
+
+		String[] lines = QuestWorld.translate(Translation.NAV_ITEM, String.valueOf(page + 1),
+						String.valueOf(panels.size()),
 						QuestWorld.translate(page < panels.size() - 1 ? Translation.NAV_NEXT : Translation.NAV_NEXTBAD),
 						QuestWorld.translate(page > 0 ? Translation.NAV_PREV : Translation.NAV_PREVBAD))
 				.split("\n");
 
-		frame.addButton(1, new ItemBuilder(Material.PAPER).amount(page + 1).wrapText(lines).get(), event -> {
-			int delta = (event.isRightClick() ? -1 : 1) * (event.isShiftClick() ? panels.size() : 1);
-			int nextPage = Math.min(Math.max(0, page + delta), panels.size() - 1);
-			Player p = (Player) event.getWhoClicked();
-			
-			popPage(p);
-			putPage(p, nextPage);
+		if (alwaysShowPages || panels.size() > 1) {
+			frame.addButton(1,
+					new ItemBuilder(Material.PAPER).modelData(995).amount(page + 1).wrapText(lines).get(),
+					event -> {
+						int delta = (event.isRightClick() ? -1 : 1)
+								* (event.isShiftClick() ? panels.size() : 1);
+						int nextPage = Math.min(Math.max(0, page + delta), panels.size() - 1);
+						Player p = (Player) event.getWhoClicked();
 
-			QuestWorld.getSounds().EDITOR_CLICK.playTo(p); // TODO This is not entirely right - not all PagedMappings
-															// are editor menus!
-			build(menu, nextPage);
+						popPage(p);
+						putPage(p, nextPage);
 
-			// This logically isn't needed, BUT inventories have a nasty habit of displaying
-			// old items when only metadata is
-			// changed. Most obvious in the entity selector with spawn eggs. Last checked
-			// MC1.12.2
-			menu.openFor(p);
-		});
+						// TODO This is not entirely right - not all PagedMappings
+						// are editor menus!
+						QuestWorld.getSounds().EDITOR_CLICK.playTo(p);
+						build(menu, nextPage, alwaysShowPages);
+
+						// This logically isn't needed, BUT inventories have a nasty habit of displaying
+						// old items when only metadata is
+						// changed. Most obvious in the entity selector with spawn eggs. Last checked
+						// MC1.12.2
+						menu.openFor(p);
+					});
+		}
 
 		if (backButton != null)
 			frame.addButton(0, ItemBuilder.Proto.MAP_BACK.get().wrapLore(backLabel).get(), backButton);

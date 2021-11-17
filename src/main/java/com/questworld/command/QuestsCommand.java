@@ -15,6 +15,7 @@ import com.questworld.api.contract.IQuest;
 import com.questworld.api.menu.PagedMapping;
 import com.questworld.api.menu.QuestBook;
 import com.questworld.util.Text;
+import org.bukkit.event.inventory.InventoryType;
 
 public class QuestsCommand implements CommandExecutor {
 
@@ -82,6 +83,9 @@ public class QuestsCommand implements CommandExecutor {
 
   public static void open(Player p, ICategory category, IQuest quest, int page, boolean force,
       boolean back) {
+		if (p.getOpenInventory().getType() != InventoryType.PLAYER) {
+			return;
+		}
     if (category != null) {
 			if (force || QuestBook.testCategory(p, category)) {
 				if (quest != null) {

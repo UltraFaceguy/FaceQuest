@@ -5,8 +5,6 @@ import com.questworld.QuestingImpl;
 import com.questworld.api.Decaying;
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
-import com.questworld.api.event.CancellableEvent;
-import com.questworld.api.event.GenericPlayerLeaveEvent;
 import com.questworld.api.menu.QuestBook;
 import com.questworld.manager.ProgressTracker;
 import com.questworld.util.AutoListener;
@@ -14,14 +12,11 @@ import com.questworld.util.TransientPermissionUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class PlayerListener extends AutoListener {
@@ -59,22 +54,6 @@ public class PlayerListener extends AutoListener {
 			p.getInventory().addItem(GuideBook.instance().item());
 
 		TransientPermissionUtil.updateTransientPerms(p);
-	}
-
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onKick(PlayerKickEvent event) {
-		CancellableEvent.send(new GenericPlayerLeaveEvent(event.getPlayer()));
-	}
-
-	@EventHandler
-	public void onQuit(PlayerQuitEvent event) {
-		CancellableEvent.send(new GenericPlayerLeaveEvent(event.getPlayer()));
-	}
-
-	@EventHandler
-	public void onLeave(GenericPlayerLeaveEvent event) {
-		Player player = event.getPlayer();
-		api.unloadPlayerStatus(player);
 	}
 
 	// Since we can't (yet) randomly update recipes at runtime, replace result with

@@ -13,10 +13,13 @@ import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils.ToastStyle;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,13 +30,17 @@ import java.util.Map;
 import java.util.UUID;
 import land.face.strife.StrifePlugin;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 class Quest extends UniqueObject implements IQuestState {
+
+  public static DecimalFormat FORMAT = new DecimalFormat("###,###,###,###");
 
   private WeakReference<Category> category;
   private YamlConfiguration config;
@@ -266,6 +273,9 @@ class Quest extends UniqueObject implements IQuestState {
   }
 
   public ItemStack getItem() {
+    if (item == null || item.getType() == Material.AIR) {
+      return new ItemStack(Material.WRITABLE_BOOK);
+    }
     return item.clone();
   }
 
@@ -469,32 +479,38 @@ class Quest extends UniqueObject implements IQuestState {
   @Override
   public ItemStack generateRewardInfo() {
     ItemStack info = new ItemStack(Material.PAPER);
+    ItemStackExtensionsKt.setCustomModelData(info, 996);
     ItemStackExtensionsKt.setDisplayName(info, TextUtils.color("&f&lQuest Rewards!"));
     List<String> lore = new ArrayList<>();
     if (questPoints > 0) {
       lore.add("&b" + questPoints + " Quest Point(s)");
     }
     if (money > 0) {
-      lore.add("&e" + money + " Bits");
+      lore.add("&e" + FORMAT.format(money) + " Bits");
     }
     if (xp > 0) {
-      lore.add("&a" + (int) xp + " Experience");
+      lore.add("&a" + FORMAT.format((int) xp) + " Combat XP");
     } else if (xp < 0) {
-      lore.add("&a" + getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp) + " Experience");
+      lore.add("&a" + FORMAT.format(getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp)) + " Combat XP");
     }
     if (StringUtils.isNotBlank(rewardsLore)) {
       lore.addAll(Arrays.asList(rewardsLore.split("\\|")));
     }
     TextUtils.setLore(info, TextUtils.color(lore));
-    ItemStackExtensionsKt.setCustomModelData(info, 50);
     return info;
   }
 
   private void handoutReward(Player p) {
 
-    QuestWorld.getSounds().QUEST_REWARD.playTo(p);
+    if (questPoints > 0) {
+      int total = QuestWorldPlugin.getAPI().getPlayerStatus(p).getQuestPoints() + questPoints;
+      ToastUtils.sendToast(p, ChatColor.AQUA + "+" + questPoints + "QP!" + ChatColor.GRAY +
+         " (" + total + " Total)", new ItemStack(Material.NETHER_STAR), ToastStyle.CHALLENGE);
+    } else {
+      QuestWorld.getSounds().QUEST_REWARD.playTo(p);
+    }
 
-    ItemStack[] itemReward = rewards.toArray(new ItemStack[rewards.size()]);
+    ItemStack[] itemReward = rewards.toArray(new ItemStack[0]);
 
     // addItem can modify item stacks, apparently. We don't want that ever.
     for (int i = 0; i < itemReward.length; ++i) {

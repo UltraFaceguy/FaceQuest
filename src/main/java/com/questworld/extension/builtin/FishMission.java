@@ -1,12 +1,5 @@
 package com.questworld.extension.builtin;
 
-import org.bukkit.Material;
-import org.bukkit.entity.Item;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.inventory.ItemStack;
-
 import com.questworld.api.Decaying;
 import com.questworld.api.MissionType;
 import com.questworld.api.QuestWorld;
@@ -16,10 +9,15 @@ import com.questworld.api.contract.MissionEntry;
 import com.questworld.api.menu.MissionButton;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
+import org.bukkit.entity.Item;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class FishMission extends MissionType implements Listener, Decaying {
 	public FishMission() {
-		super("FISH", true, new ItemStack(Material.FISHING_ROD));
+		super("FISH", true, 1001);
 	}
 
 	@Override

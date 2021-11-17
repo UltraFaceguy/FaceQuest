@@ -3,7 +3,9 @@ package com.questworld.api.menu;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -15,6 +17,7 @@ import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 
 public class Menu implements InventoryHolder {
+
 	private static final int ROW_WIDTH = 9;
 	private Inventory inv;
 	private Consumer<InventoryClickEvent>[] handlers;
@@ -34,10 +37,11 @@ public class Menu implements InventoryHolder {
 	}
 
 	private Inventory makeInv(int cells) {
-		if (title != null)
-			return Bukkit.createInventory(this, cells, title);
-
-		return Bukkit.createInventory(this, cells);
+		Inventory inv = Bukkit.createInventory(this, cells, StringUtils.isBlank(title) ? "" : title);
+		for (int i = 0; i < cells; i++) {
+			inv.setItem(i, DeluxeQuestBook.blankSlot.clone());
+		}
+		return inv;
 	}
 
 	public void resize(int rows) {

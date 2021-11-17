@@ -9,11 +9,12 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public class QuestProgressCommand implements CommandExecutor {
 
   private final QuestingImpl api;
-  private ExternalCommandMission externalCommandMission;
+  private final ExternalCommandMission externalCommandMission;
 
   public QuestProgressCommand(QuestingImpl api) {
     this.api = api;
@@ -21,7 +22,8 @@ public class QuestProgressCommand implements CommandExecutor {
   }
 
   @Override
-  public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+  public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd,
+      @NotNull String label, String[] args) {
 		if (args.length < 2 || args.length > 3) {
 			MessageUtils.sendMessage(sender, "/q-external <player> <missionId> [amount]");
 			return false;
@@ -30,19 +32,23 @@ public class QuestProgressCommand implements CommandExecutor {
     System.out.println(args[1]);
     Player player = Bukkit.getPlayer(args[0]);
     String id = args[1];
-    int amount = args.length == 3 ? Integer.parseInt(args[2]) : 1;
-
-    System.out.println(id);
+    int amount = 1;
+    if (args.length > 2) {
+      try {
+        amount = Integer.parseInt(args[2]);
+      } catch (Exception e) {
+        Bukkit.getLogger().warning("Tried to increment " + label + " by " + args[2]);
+      }
+    }
+    amount = Math.max(1, amount);
 
     for (MissionEntry r : api.getMissionEntries(externalCommandMission, player)) {
       if (r.getMission().getCustomString() == null) {
-        System.out.println(r.getMission().getDisplayName() + " ccccc");
         continue;
       }
       System.out.println(r.getMission().getCustomString());
       if (r.getMission().getCustomString().equals(id)) {
         r.addProgress(amount);
-        System.out.println("ccccc");
       }
     }
     return true;

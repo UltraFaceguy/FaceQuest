@@ -15,8 +15,8 @@ import org.bukkit.inventory.PlayerInventory;
 
 public class RewardsPrompt implements InventoryHolder {
 
-  private Inventory inv;
-  private IQuest quest;
+  private final Inventory inv;
+  private final IQuest quest;
 
   public RewardsPrompt(IQuest quest, Player player) {
     this.quest = quest;

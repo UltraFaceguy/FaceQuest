@@ -28,7 +28,7 @@ public class PlayMission extends MissionType implements Listener, Ticking {
   private HashMap<UUID, HashMap<UUID, Long>> timeMap = new HashMap<>();
 
   public PlayMission() {
-    super("PLAY_TIME", false, new ItemStack(Material.CLOCK));
+    super("PLAY_TIME", false, 1005);
   }
 
   @Override

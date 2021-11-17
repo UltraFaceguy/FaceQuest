@@ -99,8 +99,8 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     }
 
     if (autosave > 0) {
-      autosaveHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, api::onSave, autosave,
-          autosave);
+      autosaveHandle = getServer().getScheduler()
+          .scheduleSyncRepeatingTask(this, api::onSave, autosave, autosave);
     }
   }
 

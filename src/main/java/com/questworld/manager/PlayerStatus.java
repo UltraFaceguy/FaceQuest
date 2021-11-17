@@ -23,8 +23,6 @@ import com.tealcube.minecraft.bukkit.facecore.utilities.AdvancedActionBarUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
-import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
-import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils.ToastStyle;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.ArrayList;
@@ -42,12 +40,11 @@ import land.face.waypointer.WaypointerPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
 
 public class PlayerStatus implements IPlayerStatus {
 
@@ -312,18 +309,13 @@ public class PlayerStatus implements IPlayerStatus {
             TitleUtils.sendTitle(p,
                 TextUtils.color("&bQUEST COMPLETE!"),
                 TextUtils.color("&bCompleted: &f" + ChatColor.stripColor(quest.getName())));
-            if (quest.getQuestPoints() > 0) {
-              ToastUtils.sendToast(p,
-                  ChatColor.AQUA + "+" + quest.getQuestPoints() + "QP!" + ChatColor.GRAY + " ("
-                      + questPoints + " Total)", new ItemStack(Material.NETHER_STAR),
-                  ToastStyle.CHALLENGE);
-            } else {
-              p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1);
-            }
+            p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
             tracker.setQuestFinished(quest, true);
             if (!quest.getAutoClaimed()) {
               tracker.setQuestStatus(quest, QuestStatus.REWARD_CLAIMABLE);
-              new RewardsPrompt(quest, p);
+              if (p.getOpenInventory().getType() != InventoryType.PLAYER) {
+                new RewardsPrompt(quest, p);
+              }
             } else {
               quest.completeFor(p);
             }
