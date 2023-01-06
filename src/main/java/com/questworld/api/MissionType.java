@@ -86,11 +86,6 @@ public abstract class MissionType {
 	public void validate(IMissionState instance) {
 	}
 
-	public String progressString(int current, int total) {
-		float percent = current / (float) total;
-		return Math.round(percent * 100) + "% (" + current + "/" + total + ")";
-	}
-
 	public final MenuData getButton(int index) {
 		return menuData.get(index);
 	}
@@ -103,8 +98,8 @@ public abstract class MissionType {
 		return menuData.remove(index);
 	}
 
-	public final void buildMenu(IMissionState changes, Menu menu) {
-		putButton(2, MissionButton.partySupport(changes));
+	public final void buildMenu(IMission mission, Menu menu) {
+		IMissionState changes = mission.getState();
 		putButton(3, MissionButton.actionBarUpdates(changes));
 		putButton(4, MissionButton.waypointer(changes));
 		if (supportsDeathReset())
@@ -112,7 +107,7 @@ public abstract class MissionType {
 		if (supportsTimeframes())
 			putButton(6, MissionButton.timeframe(changes));
 		putButton(7, MissionButton.missionName(changes));
-		putButton(8, MissionButton.dialogue(changes));
+		putButton(8, MissionButton.dialogue(mission));
 
 		validate(changes);
 		layoutMenu(changes);

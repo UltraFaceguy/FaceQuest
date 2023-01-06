@@ -134,11 +134,6 @@ class Mission extends UniqueObject implements IMissionState {
 	}
 
 	@Override
-	public boolean getPartySupport() {
-		return partySupport;
-	}
-
-	@Override
 	public boolean getActionBarUpdates() {
 		return actionBarUpdates;
 	}

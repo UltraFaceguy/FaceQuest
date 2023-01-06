@@ -32,7 +32,6 @@ import land.face.strife.StrifePlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -138,6 +137,8 @@ class Quest extends UniqueObject implements IQuestState {
       updateLastModified();
     }
 
+    hiddenUntilStarted = config.getBoolean("hide-until-started", false);
+
     name = Text.colorize(config.getString("name"));
     rewardsLore = Text.colorize(config.getString("rewards-lore", ""));
     ItemStack i2 = config.getItemStack("item", item);
@@ -166,8 +167,8 @@ class Quest extends UniqueObject implements IQuestState {
     this.id = id;
     this.category = new WeakReference<>(category);
     this.name = name;
-    this.enabled = QuestWorld.getPlugin().getConfig().getBoolean("options.quests-default-enabled");
-
+    enabled = QuestWorld.getPlugin().getConfig().getBoolean("options.quests-default-enabled");
+    hiddenUntilStarted = false;
     config = YamlConfiguration.loadConfiguration(Facade.fileFor(this));
   }
 
@@ -241,6 +242,7 @@ class Quest extends UniqueObject implements IQuestState {
     config.set("in-order", ordered);
     config.set("auto-claim", autoclaim);
     config.set("enabled", enabled);
+    config.set("hide-until-started", hiddenUntilStarted);
     config.set("world-blacklist", world_blacklist);
     config.set("weight", weight);
     config.set("level-requirement", levelRequirement);
@@ -486,7 +488,7 @@ class Quest extends UniqueObject implements IQuestState {
       lore.add("&b" + questPoints + " Quest Point(s)");
     }
     if (money > 0) {
-      lore.add("&e" + FORMAT.format(money) + " Bits");
+      lore.add("&e" + FORMAT.format(money) + "◎");
     }
     if (xp > 0) {
       lore.add("&a" + FORMAT.format((int) xp) + " Combat XP");
@@ -502,12 +504,11 @@ class Quest extends UniqueObject implements IQuestState {
 
   private void handoutReward(Player p) {
 
+    QuestWorld.getSounds().QUEST_REWARD.playTo(p);
     if (questPoints > 0) {
       int total = QuestWorldPlugin.getAPI().getPlayerStatus(p).getQuestPoints() + questPoints;
       ToastUtils.sendToast(p, ChatColor.AQUA + "+" + questPoints + "QP!" + ChatColor.GRAY +
          " (" + total + " Total)", new ItemStack(Material.NETHER_STAR), ToastStyle.CHALLENGE);
-    } else {
-      QuestWorld.getSounds().QUEST_REWARD.playTo(p);
     }
 
     ItemStack[] itemReward = rewards.toArray(new ItemStack[0]);
@@ -527,7 +528,7 @@ class Quest extends UniqueObject implements IQuestState {
 
     if (money > 0) {
       QuestWorld.getEconomy().ifPresent(economy -> economy.depositPlayer(p, money));
-      MessageUtils.sendMessage(p, "&e  +" + money + " Bit(s)!");
+      MessageUtils.sendMessage(p, "&e  +" + money + "◎");
     }
 
     if (xp > 0) {

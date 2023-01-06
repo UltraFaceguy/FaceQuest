@@ -43,10 +43,6 @@ public interface IPlayerStatus {
 
 	void update();
 
-	String progressString(IQuest quest, float progress);
-
-	String progressString();
-
 	enum DeluxeCategory {
 		OPEN_QUESTS,
 		UNFINISHED_QUESTS,

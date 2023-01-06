@@ -19,7 +19,6 @@ import com.questworld.quest.WeightComparator;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 import com.questworld.util.TransientPermissionUtil;
-import com.tealcube.minecraft.bukkit.facecore.utilities.AdvancedActionBarUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
@@ -36,6 +35,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import land.face.SnazzyPartiesPlugin;
 import land.face.data.Party;
+import land.face.strife.StrifePlugin;
 import land.face.waypointer.WaypointerPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -408,33 +408,6 @@ public class PlayerStatus implements IPlayerStatus {
     return progress;
   }
 
-  @Override
-  public String progressString(IQuest quest, float progress) {
-    QuestStatus status = getStatus(quest);
-    if (status == QuestStatus.FINISHED || status == QuestStatus.ON_COOLDOWN || progress >= 0.9998) {
-      return Text.progressBar(10, 10, StringUtils.EMPTY);
-    }
-    return Text.progressBar(progress, StringUtils.EMPTY);
-  }
-
-  @Override
-  public String progressString() {
-    int done = 0;
-    int total = 0;
-
-    for (ICategory category : QuestWorld.getFacade().getCategories()) {
-      total += category.getQuests().size();
-
-      for (IQuest quest : category.getQuests()) {
-        if (hasFinished(quest)) {
-          ++done;
-        }
-      }
-    }
-
-    return Text.progressBar(done, total, StringUtils.EMPTY);
-  }
-
   public void addProgress(IMission task, int amount) {
     int newProgress = Math.max(getProgress(task) + amount, 0);
     setProgress(task, Math.min(task.getAmount(), newProgress));
@@ -444,23 +417,6 @@ public class PlayerStatus implements IPlayerStatus {
 
   public void setProgress(IMission task, int amount) {
     setSingleProgress(task, amount);
-
-    Party party = SnazzyPartiesPlugin.getInstance().getPartyManager().getParty(playerUUID);
-
-    if (task.getPartySupport() && party != null) {
-      Location location = getPlayer().getPlayer().getLocation();
-      Set<Player> members = SnazzyPartiesPlugin.getInstance().getPartyManager()
-          .getNearbyPlayers(party, location, 35D);
-      for (Player p : members) {
-        if (p.getUniqueId().equals(playerUUID)) {
-          continue;
-        }
-        PlayerStatus partyMemberStatus = of(p.getUniqueId());
-        if (partyMemberStatus.getStatus(task.getQuest().getState()) == QuestStatus.AVAILABLE) {
-          partyMemberStatus.setSingleProgress(task, amount);
-        }
-      }
-    }
   }
 
   private static void updateQuestWaypoint(IMission task, Player player) {
@@ -496,19 +452,18 @@ public class PlayerStatus implements IPlayerStatus {
 
     boolean complete = amount == task.getAmount();
 
-    if (task.getActionBarUpdates()) {
+    if (isMissionActive(task) && task.getActionBarUpdates()) {
       String actionBar;
+      String text = ChatColor.stripColor(task.getQuest().getName());
       if (complete) {
-        actionBar = "&a[Task Complete!] " + ChatColor.stripColor(task.getQuest().getName());
+        actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.YELLOW + text;
       } else {
-        actionBar = "&b[Task] " + ChatColor.stripColor(task.getQuest().getName()) + " " +
-            Text.progressBar(getProgress(task), task.getAmount(), StringUtils.EMPTY) + " "
-            + ChatColor.AQUA +
-            amount + "/" + task.getAmount();
+        actionBar = ChatColor.AQUA + text;
+        if (task.getAmount() > 1) {
+          actionBar += " (" + amount + "/" + task.getAmount() + ")";
+        }
       }
-      Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-          () -> AdvancedActionBarUtil.addOverrideMessage((Player) getPlayer(), "QUEST", actionBar,
-              20), 2L);
+      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 5, 0, actionBar, 100);
     }
 
     if (complete) {
@@ -522,7 +477,22 @@ public class PlayerStatus implements IPlayerStatus {
   public static void sendDialogue(PlayerStatus status, IMission task, Iterator<String> dialogue) {
     of(status.playerUUID).inDialogue = false;
     ifOnline(status.playerUUID).ifPresent(player -> {
+      if (task.getType().getName().equals("CITIZENS_INTERACT")) {
+        IMission nextTask = getNextTask(task);
+        if (nextTask != null) {
+          PlayerTools.sendTranslation(player, false,
+              Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
+          String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
+              ChatColor.stripColor(task.getQuest().getName());
+          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 5, 0, actionBar, 100);
 
+          MessageUtils.sendMessage(player,
+              "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
+          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
+              () -> updateQuestWaypoint(nextTask, player), 50L);
+        }
+        return;
+      }
       if (dialogue.hasNext()) {
         sendDialogueComponent(player, dialogue.next());
         of(status.playerUUID).inDialogue = true;
@@ -531,17 +501,19 @@ public class PlayerStatus implements IPlayerStatus {
             () -> sendDialogue(status, task, dialogue), 50L);
       } else {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-        PlayerTools
-            .sendTranslation(player, false, Translation.NOTIFY_COMPLETED, task.getQuest().getName(),
-                task.getText());
+        PlayerTools.sendTranslation(player, false,
+            Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
         status.update();
         IMission nextTask = getNextTask(task);
         if (nextTask != null) {
+          String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
+              ChatColor.stripColor(task.getQuest().getName());
+          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 5, 0, actionBar, 100);
+
           MessageUtils.sendMessage(player,
               "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
-          Bukkit.getScheduler()
-              .runTaskLater(QuestWorld.getPlugin(), () -> updateQuestWaypoint(nextTask, player),
-                  50L);
+          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
+              () -> updateQuestWaypoint(nextTask, player), 50L);
         }
       }
     });
@@ -591,8 +563,7 @@ public class PlayerStatus implements IPlayerStatus {
   }
 
   // Right, so this function USED to loop through every file in data-storage/Quest
-  // World on
-  // the main thread. W H A T
+  // World on the main thread. W H A T
   public static void clearAllQuestData(IQuest quest) {
     clearDataImpl(quest);
   }
@@ -628,8 +599,7 @@ public class PlayerStatus implements IPlayerStatus {
           t.onSave();
         }
         // File name was not
-        catch (IllegalArgumentException e) {
-        }
+        catch (IllegalArgumentException ignored) {}
       }
 
       // Second: go back to the main thread and make sure all player managers know

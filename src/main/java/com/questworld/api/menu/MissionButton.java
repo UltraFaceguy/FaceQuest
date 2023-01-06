@@ -27,6 +27,7 @@ import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import land.face.portrait.PortraitGenerator;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -68,14 +69,6 @@ public class MissionButton {
           int amt = clickNumber(changes.getAmount(), groupSize, event);
           changes.setAmount(Math.max(amt, 1));
         }
-    );
-  }
-
-  public static MenuData partySupport(IMissionState changes) {
-    return simpleButton(changes,
-        new ItemBuilder(Material.PLAYER_HEAD).wrapText(
-            "&bPARTY SUPPORT: &f" + changes.getPartySupport()).get(),
-        event -> changes.setPartySupport(!changes.getPartySupport())
     );
   }
 
@@ -302,10 +295,18 @@ public class MissionButton {
     p.sendMessage(Text.colorize("&7&m----------------------------"));
   }
 
-  public static MenuData dialogue(IMissionState changes) {
+  public static MenuData dialogue(IMission mission) {
+    IMissionState changes = mission.getState();
+    List<String> lore = new ArrayList<>(List.of(
+        "&7Dialogue",
+        "",
+        "&fLeft Click: Edit the Dialogue",
+        "&fRight Click: Demo Dialogue",
+        ""
+    ));
+    lore.addAll(changes.getDialogue());
     return new MenuData(new ItemBuilder(Material.PAPER)
-        .wrapText("&7Dialogue", "", "&rLeft Click: Edit the Dialogue",
-            "&rRight Click: Dialogue Preview").get(),
+        .wrapText(lore.toArray(new String[0])).get(),
         event -> {
           Player p = (Player) event.getWhoClicked();
 
@@ -313,8 +314,19 @@ public class MissionButton {
 						if (changes.getDialogue().isEmpty()) {
 							p.sendMessage(Text.colorize("&4No Dialogue found!"));
 						} else {
-							PlayerStatus.sendDialogue(QuestWorldPlugin.getAPI().getPlayerStatus(p), changes,
-									changes.getDialogue().iterator());
+              if ("CITIZENS_INTERACT".equals(changes.getType().toString())) {
+                boolean success = PortraitGenerator.getInstance().getDialogueManager()
+                    .display(p, mission.getUniqueId().toString());
+                if (!success) {
+                  p.sendMessage(Text.colorize("&4Failed to display dialogue!"));
+                } else {
+                  p.sendMessage(Text.colorize("&aOpening dialogue menu..."));
+                }
+              } else {
+                p.sendMessage(Text.colorize("&aShowing dialogue..."));
+                PlayerStatus.sendDialogue(QuestWorldPlugin.getAPI().getPlayerStatus(p), changes,
+                    changes.getDialogue().iterator());
+              }
 						}
             return;
           }

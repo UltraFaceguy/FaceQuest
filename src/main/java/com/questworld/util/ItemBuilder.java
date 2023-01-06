@@ -1,10 +1,12 @@
 package com.questworld.util;
 
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.util.Strings;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -18,6 +20,7 @@ import com.questworld.api.Translation;
 import com.questworld.api.annotation.Mutable;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.inventory.meta.SpawnEggMeta;
+import org.bukkit.util.ChatPaginator;
 
 /**
  * This class provides a builder for ItemStacks. It is exactly what you expect,
@@ -352,16 +355,22 @@ public class ItemBuilder {
 	 * @return this, for chaining
 	 */
 	public @Mutable ItemBuilder wrapText(String... text) {
+		if (text.length == 0) {
+			return this;
+		}
+
+		ArrayList<String> newLore = new ArrayList<>();
 		int length = QuestWorld.getPlugin().getConfig().getInt("options.text-wrap", 32);
-		text[0] = "&f&o" + text[0];
-		ArrayList<String> lines = Text.wrap(length, Text.colorizeList(text));
+		for (String s : text) {
+			newLore.addAll(List.of(ChatPaginator.wordWrap(TextUtils.color(s), length)));
+		}
+
+		String title = newLore.get(0);
+		newLore.remove(0);
 
 		ItemMeta stackMeta = resultStack.getItemMeta();
-		if (lines.size() > 0) {
-			stackMeta.setDisplayName(lines.get(0));
-			lines.remove(0);
-		}
-		stackMeta.setLore(lines);
+		stackMeta.setDisplayName(title);
+		stackMeta.setLore(newLore);
 		resultStack.setItemMeta(stackMeta);
 
 		return this;
@@ -377,7 +386,7 @@ public class ItemBuilder {
 	public @Mutable ItemBuilder wrapLore(String... lore) {
 		int length = QuestWorld.getPlugin().getConfig().getInt("options.text-wrap", 32);
 		lore[0] = "&f&o" + lore[0];
-		return directLore(Text.wrap(length, Text.colorizeList(lore)));
+		return directLore(Text.wrapAndColor(length, lore));
 	}
 
 	/**

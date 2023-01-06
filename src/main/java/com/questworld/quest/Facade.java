@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,11 +23,12 @@ import com.questworld.manager.ProgressTracker;
 import com.questworld.util.WeakValueMap;
 
 public class Facade implements IFacade {
+
 	private long lastSave = 0;
-	private HashMap<UUID, Category> categoryMap = new HashMap<>();
-	private WeakValueMap<Integer, Category> categoryPosition = new WeakValueMap<>();
-	private WeakValueMap<UUID, Quest> questMap = new WeakValueMap<>();
-	private WeakValueMap<UUID, Mission> missionMap = new WeakValueMap<>();
+	private final HashMap<UUID, Category> categoryMap = new HashMap<>();
+	private final WeakValueMap<Integer, Category> categoryPosition = new WeakValueMap<>();
+	private final WeakValueMap<UUID, Quest> questMap = new WeakValueMap<>();
+	private final WeakValueMap<UUID, Mission> missionMap = new WeakValueMap<>();
 
 	@Override
 	public Category getCategory(UUID uniqueId) {
@@ -74,7 +76,7 @@ public class Facade implements IFacade {
 	}
 
 	private static int[] splitQuestString(String in) {
-		int result[] = { 0, 0 };
+		int[] result = { 0, 0 };
 
 		int len = in.length();
 		int mid = in.lastIndexOf('C', len - 2);
@@ -236,7 +238,7 @@ public class Facade implements IFacade {
 
 	@Override
 	public void deleteMission(IMission mission) {
-		((Mission) mission).setDialogue(Arrays.asList());
+		((Mission) mission).setDialogue(List.of());
 		ProgressTracker.saveDialogue(mission);
 
 		PlayerStatus.clearAllMissionData(mission);

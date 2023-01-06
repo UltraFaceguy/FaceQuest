@@ -41,8 +41,6 @@ public interface IMission extends DataObject {
 
 	ItemStack getDisplayItem();
 
-	boolean getPartySupport();
-
 	boolean getActionBarUpdates();
 
 	String getWaypointerId();

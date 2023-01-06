@@ -45,7 +45,6 @@ public class FishMission extends MissionType implements Listener, Decaying {
 	@Override
 	protected void layoutMenu(IMissionState changes) {
 		putButton(10, MissionButton.item(changes));
-		putButton(16, MissionButton.partySupport(changes));
 		putButton(17, MissionButton.amount(changes));
 	}
 }

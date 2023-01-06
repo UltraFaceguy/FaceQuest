@@ -57,7 +57,6 @@ public class MineMission extends MissionType implements Listener, Decaying {
 					MissionButton.apply(event, changes);
 				}
 		));
-		putButton(16, MissionButton.partySupport(changes));
 		putButton(17, MissionButton.amount(changes));
 	}
 }

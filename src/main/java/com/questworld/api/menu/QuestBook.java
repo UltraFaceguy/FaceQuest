@@ -157,8 +157,9 @@ public class QuestBook {
                   String.valueOf(playerStatus.countQuests(category, QuestStatus.AVAILABLE)),
                   String.valueOf(playerStatus.countQuests(category, QuestStatus.ON_COOLDOWN)),
                   String.valueOf(playerStatus.countQuests(category, QuestStatus.REWARD_CLAIMABLE)),
-                  Text.progressBar(finishedCount, questCount, StringUtils.EMPTY))).split("\n"))
-                  .get(),
+                  Text.progressBar(finishedCount, questCount),
+                  Text.progressString(finishedCount, questCount, true)))
+                      .split("\n")).get(),
               event -> {
                 Player p2 = (Player) event.getWhoClicked();
                 PagedMapping.putPage(p2, 0);
@@ -242,7 +243,7 @@ public class QuestBook {
       }
 
       if (translation == null) {
-        String extra = null;
+        String extra;
 
         if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
           extra = QuestWorld.translate(p, Translation.quests_state_reward_claimable);
@@ -250,18 +251,18 @@ public class QuestBook {
           extra = QuestWorld.translate(p, Translation.quests_state_cooldown);
         } else if (playerStatus.hasFinished(quest)) {
           extra = QuestWorld.translate(p, Translation.quests_state_completed);
+        } else {
+          extra = Text.progressString(
+              (int) (playerStatus.getProgress(quest) * (double) quest.getMissions().size()),
+              quest.getMissions().size());
         }
 
-        view.addButton(quest.getID(),
-            new ItemBuilder(quest.getItem())
-                .wrapText(quest.getName(), "", playerStatus.progressString(quest, 1), "",
-                    "&7" + playerStatus.getProgress(quest) + "/" + quest.getMissions().size()
-                        + QuestWorld.translate(p, Translation.quests_tasks_completed),
-                    (extra == null) ? null : "", extra)
-                .get(),
-            event -> {
-              openQuest((Player) event.getWhoClicked(), quest, back, true);
-            }, true);
+        view.addButton(quest.getID(), new ItemBuilder(quest.getItem()).wrapText(
+            quest.getName(),
+            "",
+            Text.progressBar((float) playerStatus.getProgress(quest)),
+            extra).get(),
+            event -> openQuest((Player) event.getWhoClicked(), quest, back, true), true);
       } else {
         view.addButton(quest.getID(),
             glassPane.wrapText(quest.getName(), "",
@@ -358,13 +359,12 @@ public class QuestBook {
         ItemBuilder entryItem = new ItemBuilder(mission.getDisplayItem());
         int current = manager.getProgress(mission);
         int total = mission.getAmount();
-        String progress = Text.progressBar(current, total, mission.getType().progressString(current, total));
-        progress += " " + ChatColor.WHITE + current + "/" + total;
+        String progress = Text.progressBar(current, total);
 
         if (mission.getType() instanceof Manual) {
-          entryItem.wrapText(mission.getText(), "", progress, "", ((Manual) mission.getType()).getLabel());
+          entryItem.wrapText(mission.getText(), "", progress, Text.progressString(current, total), "", ((Manual) mission.getType()).getLabel());
         } else {
-          entryItem.wrapText(mission.getText(), "", progress);
+          entryItem.wrapText(mission.getText(), "", progress, Text.progressString(current, total));
         }
 
         item = entryItem.get();
@@ -965,7 +965,7 @@ public class QuestBook {
     menu.put(22, new ItemBuilder(Material.GRASS).wrapText("&7World blacklist", "", "&e> Click to open world selector").get(), event -> openWorldSelector((Player) event.getWhoClicked(), quest));
 
     menu.put(23, new ItemBuilder(Material.MAP)
-        .wrapText("&aHide Until Started: " + (!quest.isHiddenUntilStarted() ? "&2&l\u2714" : "&4&l\u2718"),
+        .wrapText("&aHide Until Started: " + (quest.isHiddenUntilStarted() ? "&2&l\u2714" : "&4&l\u2718"),
             "&7Should quest be hidden until a mission is done?",
             "&e> Click To Toggle")
         .get(), event -> {
@@ -1151,7 +1151,7 @@ public class QuestBook {
     });
 
     // Mission types now handle their own menu data!
-    mission.getType().buildMenu(mission.getState(), menu);
+    mission.getType().buildMenu(mission, menu);
 
     ItemStack missionSelector = new ItemBuilder(mission.getType().getSelectorItem()).flagAll()
         .wrapText(

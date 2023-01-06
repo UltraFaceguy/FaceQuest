@@ -42,13 +42,6 @@ public class PlayMission extends MissionType implements Listener, Ticking {
   }
 
   @Override
-  public String progressString(int current, int total) {
-    float percent = current / (float) total;
-    int remaining = total - current;
-    return Math.round(percent * 100) + "% (" + Text.timeFromNum(remaining) + " remaining)";
-  }
-
-  @Override
   public void onManual(Player player, MissionEntry result) {
     if (result.getMission().getCustomInt() == TOTAL) {
       result.setProgress(player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20 / 60);

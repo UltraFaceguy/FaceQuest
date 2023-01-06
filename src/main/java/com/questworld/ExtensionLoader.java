@@ -16,6 +16,7 @@ import java.util.jar.JarFile;
 
 import com.questworld.api.QuestExtension;
 import com.questworld.util.Log;
+import org.bukkit.Bukkit;
 
 public final class ExtensionLoader {
 	private ClassLoader loader;
@@ -50,26 +51,22 @@ public final class ExtensionLoader {
 	}
 
 	public List<QuestExtension> load(File extensionFile) {
-		Log.fine("Loader - Reading file: " + extensionFile.getName());
+		Bukkit.getLogger().info("[FaceQuest] Loading quest expansion " + extensionFile.getName());
 
 		JarFile jar;
 		try {
 			jar = new JarFile(extensionFile);
-		}
-		catch (Exception e) {
-			Log.severe("Failed to load \"" + extensionFile + "\": is it a valid jar file?");
+			Bukkit.getLogger().warning("[FaceQuest] - jar loaded!");
+		} catch (Exception e) {
+			Bukkit.getLogger().warning("[FaceQuest] - Failed to load " + extensionFile.getName());
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
 
 		URL[] jarURLs = { urlOf(extensionFile) };
 
-		URLClassLoader newLoader = AccessController.doPrivileged(new PrivilegedAction<URLClassLoader>() {
-			@Override
-			public URLClassLoader run() {
-				return new URLClassLoader(jarURLs, loader);
-			}
-		});
+		URLClassLoader newLoader = AccessController.doPrivileged(
+				(PrivilegedAction<URLClassLoader>) () -> new URLClassLoader(jarURLs, loader));
 
 		Enumeration<JarEntry> entries = jar.entries();
 		ArrayList<Class<?>> extensionClasses = new ArrayList<>();
@@ -84,11 +81,9 @@ public final class ExtensionLoader {
 			Class<?> clazz;
 			try {
 				clazz = newLoader.loadClass(className);
-			}
-			catch (Throwable e) {
-				// Hide these exceptions because extension may not be enabled
-				Log.fine("Could not load class \"" + className + "\"");
-				// e.printStackTrace();
+			} catch (Throwable e) {
+				Bukkit.getLogger().warning("Could not load class \"" + className + "\"");
+				e.printStackTrace();
 				continue;
 			}
 
@@ -107,8 +102,8 @@ public final class ExtensionLoader {
 				extension = (QuestExtension) extensionClass.getConstructor().newInstance();
 			}
 			catch (Throwable e) {
-				Log.severe("Exception while constructing extension class \"" + extensionClass + "\"!");
-				Log.severe("Is it missing a default constructor?");
+				Bukkit.getLogger().warning("Exception while constructing extension class \"" + extensionClass + "\"!");
+				Bukkit.getLogger().warning("Is it missing a default constructor?");
 				e.printStackTrace();
 				continue;
 			}

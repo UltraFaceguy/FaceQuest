@@ -1,5 +1,8 @@
 package com.questworld;
 
+import com.questworld.ampmenu.main.QuestMenu;
+import com.questworld.api.contract.ICategory;
+import com.questworld.api.contract.IQuest;
 import com.questworld.api.contract.QuestingAPI;
 import com.questworld.command.ClickCommand;
 import com.questworld.command.DeluxeQuestsCommand;
@@ -11,11 +14,14 @@ import com.questworld.listener.PlayerListener;
 import com.questworld.listener.SpawnerListener;
 import com.questworld.util.Log;
 import com.questworld.util.TransientPermissionUtil;
+import info.faceland.loot.utils.MaterialUtil;
 import java.text.DecimalFormat;
+import lombok.Getter;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +36,9 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
   private int questCheckHandle = -1;
 
   private SpawnerListener spawnListener;
+
+  @Getter
+  private QuestMenu questMenu;
 
   public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###");
 
@@ -76,6 +85,27 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     for (Player p : Bukkit.getOnlinePlayers()) {
       TransientPermissionUtil.updateTransientPerms(p);
     }
+
+    questMenu = new QuestMenu(this);
+
+    Bukkit.getScheduler().runTaskLater(this, () -> {
+      long current = System.currentTimeMillis();
+      Bukkit.getLogger().info("[FaceQuest] Running Loot updateItem pass...");
+      for (ICategory c : QuestWorldPlugin.getAPI().getFacade().getCategories()) {
+        for (IQuest q : c.getQuests()) {
+          for (ItemStack stack : q.getRewards()) {
+            try {
+              MaterialUtil.updateItem(stack);
+            } catch (Exception e) {
+              Bukkit.getLogger().warning("[FaceQuest] Exception updating item for " + q.getName());
+              Bukkit.getLogger().warning("[FaceQuest] stack: " + e);
+            }
+          }
+        }
+      }
+      long diff = System.currentTimeMillis() - current;
+      Bukkit.getLogger().info("[FaceQuest] Complete! Loot updateItem finished in " + diff + "ms");
+    }, 1200);
   }
 
   public void loadConfigs() {
@@ -124,7 +154,8 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
   }
 
   private boolean setupPermissions() {
-    RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+    RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager()
+        .getRegistration(Permission.class);
     perms = rsp.getProvider();
     return perms != null;
   }

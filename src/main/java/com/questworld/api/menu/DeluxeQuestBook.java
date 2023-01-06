@@ -1,5 +1,6 @@
 package com.questworld.api.menu;
 
+import com.questworld.QuestWorldPlugin;
 import com.questworld.api.Manual;
 import com.questworld.api.QuestStatus;
 import com.questworld.api.QuestWorld;
@@ -81,7 +82,7 @@ public class DeluxeQuestBook {
       PagedMapping.putPage(p, quests.size() / cellsPerPage);
       PagedMapping.putPage(p, page);
       view.setBackButton(" " + QuestWorld.translate(p, Translation.gui_title),
-          event -> openMainMenu((Player) event.getWhoClicked()));
+          event -> QuestWorldPlugin.get().getQuestMenu().open(p));
     }
 
     int index = 0;
@@ -92,10 +93,12 @@ public class DeluxeQuestBook {
       QuestStatus questStatus = playerStatus.getStatus(quest);
       int maxMissions = quest.getMissions().size();
       float completedMissions = 0;
+      boolean hasCompletedAnyMission = false;
       String waypointerId = "";
       for (IMission mission : quest.getOrderedMissions()) {
         if (playerStatus.hasCompletedTask(mission)) {
           completedMissions++;
+          hasCompletedAnyMission = true;
           continue;
         }
         completedMissions += (float) playerStatus.getProgress(mission) / mission.getAmount();
@@ -105,9 +108,11 @@ public class DeluxeQuestBook {
         waypointerId = mission.getWaypointerId();
         break;
       }
+      if (quest.isHiddenUntilStarted() && !hasCompletedAnyMission) {
+        continue;
+      }
 
       String statusString;
-
       if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
         statusString = QuestWorld.translate(p, Translation.quests_state_reward_claimable);
       } else if (questStatus == QuestStatus.ON_COOLDOWN) {
@@ -115,18 +120,26 @@ public class DeluxeQuestBook {
       } else if (playerStatus.hasFinished(quest)) {
         statusString = QuestWorld.translate(p, Translation.quests_state_completed);
       } else {
-        statusString = playerStatus.progressString(quest, completedMissions / maxMissions);
+        statusString = Text.progressBar(completedMissions / maxMissions);
       }
+      String progressNum = Text.progressString((int) completedMissions, maxMissions);
 
       if (StringUtils.isBlank(waypointerId)) {
-        view.addButton(index, new ItemBuilder(quest.getItem()).wrapText(quest.getName(), "",
-                statusString).get(),
+        view.addButton(index, new ItemBuilder(quest.getItem()).wrapText(
+              quest.getName(),
+              "",
+              statusString,
+              progressNum).get(),
             event -> openQuest((Player) event.getWhoClicked(), quest, deluxeCategory, true), true);
       } else {
         String finalWaypointerId = waypointerId;
         view.addButton(index,
-            new ItemBuilder(quest.getItem()).wrapText(quest.getName(), "", statusString,
-                "", "&bº Right-click to set a waypoint!").get(),
+            new ItemBuilder(quest.getItem()).wrapText(
+                quest.getName(),
+                "",
+                statusString,
+                progressNum,
+                "", "&b> Right-click to set waypoint! <").get(),
             event -> {
               if (event.getClick() == ClickType.RIGHT) {
                 setWaypoint((Player) event.getWhoClicked(), finalWaypointerId);
@@ -207,9 +220,8 @@ public class DeluxeQuestBook {
         int current = manager.getProgress(mission);
         int total = mission.getAmount();
 
-        String progress = Text.progressBar(current, total, mission.getType().progressString(current, total));
-        String number = ChatColor.WHITE + "[ " + manager.getProgress(mission) +
-            " / " + mission.getAmount() + " ]";
+        String progress = Text.progressBar(current, total);
+        String number = Text.progressString(manager.getProgress(mission), mission.getAmount());
 
         if (StringUtils.isBlank(mission.getWaypointerId())) {
           if (mission.getType() instanceof Manual) {
@@ -221,10 +233,10 @@ public class DeluxeQuestBook {
         } else {
           if (mission.getType() instanceof Manual) {
             entryItem.wrapText(mission.getText(), "", progress, number, "",
-                "&bº Right-click to set a waypoint!", ((Manual) mission.getType()).getLabel());
+                "&b> Right-click to set waypoint! <", ((Manual) mission.getType()).getLabel());
           } else {
             entryItem.wrapText(mission.getText(), "", progress, number, "",
-                "&bº Right-click to set a waypoint!");
+                "&b> Right-click to set waypoint! <");
           }
         }
 

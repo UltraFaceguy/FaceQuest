@@ -3,9 +3,15 @@ package com.questworld.util;
 import com.questworld.api.QuestWorld;
 import com.questworld.api.Translation;
 import com.questworld.api.annotation.Nullable;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +27,9 @@ public final class Text {
 
   private static final String greenCheck = colorize("&2&l\u2714");
   private static final String redX = colorize("&4&l\u2718");
+
+  private final static String cap = FaceColor.DARK_GRAY + "▌\uF801";
+  private static final List<String> PROGRESS_BARS = buildBars();
 
   /**
    * Colors a string
@@ -170,108 +179,136 @@ public final class Text {
     return QuestWorld.translate(Translation.TIME_FMT, String.valueOf(hours), String.valueOf(minutes));
   }
 
-  private static final String[] progress_colors = {"&e", "&e", "&e", "&e", "&e", "&2"};
-
-  private static final String progress_bar = "▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801▌\uF801";
-
-  public static String progressBar(float current, float total, @Nullable("defaults to xy%") String append) {
-    return progressBar(current / total, append);
+  private static List<String> buildBars() {
+    return List.of(
+        FaceColor.TRUE_WHITE +"砀",
+        FaceColor.TRUE_WHITE +"砟",
+        FaceColor.TRUE_WHITE +"砂",
+        FaceColor.TRUE_WHITE +"砃",
+        FaceColor.TRUE_WHITE +"砄",
+        FaceColor.TRUE_WHITE +"砅",
+        FaceColor.TRUE_WHITE +"砆",
+        FaceColor.TRUE_WHITE +"砇",
+        FaceColor.TRUE_WHITE +"砈",
+        FaceColor.TRUE_WHITE +"砉",
+        FaceColor.TRUE_WHITE +"砊",
+        FaceColor.TRUE_WHITE +"砋",
+        FaceColor.TRUE_WHITE +"砌",
+        FaceColor.TRUE_WHITE +"砍",
+        FaceColor.TRUE_WHITE +"砎",
+        FaceColor.TRUE_WHITE +"砏",
+        FaceColor.TRUE_WHITE +"砐",
+        FaceColor.TRUE_WHITE +"砑",
+        FaceColor.TRUE_WHITE +"砒",
+        FaceColor.TRUE_WHITE +"砓",
+        FaceColor.TRUE_WHITE +"研"
+    );
   }
 
-  public static String progressBar(float percent, @Nullable("defaults to xy%") String append) {
-    int barSize = progress_bar.length();
-    int length = (int) (percent * barSize);
+  public static String progressString(int current, int total) {
+    return progressString(current, total, false);
+  }
 
-    return colorize("&8▌\uF801" + progress_colors[(int) (percent * 5)], progress_bar.substring(barSize - length), "&0",
-        progress_bar.substring(length ) + "&8▌");
+  public static String progressString(int current, int total, boolean showPercent) {
+    if (!showPercent) {
+      return FaceColor.WHITE + "[ " + current + " / " + total + " ]";
+    } else {
+      float percent = (float) Math.floor((current * 100) / (float) total);
+      return FaceColor.WHITE + "[ " + current + " / " + total + " ]  " + percent + "%";
+    }
+  }
+
+  public static String progressBar(float current, float total) {
+    return progressBar(current / total);
+  }
+
+  public static String progressBar(float percent) {
+    if (percent > 0.995) {
+      return PROGRESS_BARS.get(PROGRESS_BARS.size() - 1);
+    }
+    return PROGRESS_BARS.get((int) Math.floor(percent * PROGRESS_BARS.size()));
   }
 
   public static String itemName(ItemStack stack) {
     return ItemStackExtensionsKt.getDisplayName(stack);
   }
 
-  /**
-   * This function wraps words to align at a specific length, and works with colorized strings. The minimum length is 8
-   * characters, and shorter lengths will be set to 8.
-   *
-   * @param max_length The maximum length of string
-   * @param input      An array of colorized strings
-   * @return An array of strings, split by length
-   */
-  public static ArrayList<String> wrap(int max_length, String... input) {
-    ArrayList<String> output = new ArrayList<>(input.length);
-    max_length = Math.max(max_length, 8);
-    String format = "";
-    for (String s1 : input) {
-      if (s1 == null) {
-        continue;
-      }
+  private static final Map<String, String> cachedObjectiveNames = new HashMap<>();
 
-      for (String s : s1.split("\n")) {
-        int begin = 0;
-        int end = -1;
-        int seq_begin = 0;
-        int seq_end = -1;
-        String prepared_format = format;
-        String committed_format = format;
-
-        for (int i = 0, n = 0; i < s.length(); ++i) {
-          char c1 = s.charAt(i);
-          if (c1 == colorChar) {
-            if (i + 1 != s.length()) {
-              char c = Character.toLowerCase(s.charAt(i + 1));
-              if ("0123456789abcdefr".indexOf(c) != -1) {
-                prepared_format = String.valueOf(colorChar) + c;
-                n -= 2;
-                if (i > seq_end) {
-                  seq_begin = i;
-                }
-                seq_end = i + 1;
-              } else if ("olmnk".indexOf(c) != -1) {
-                prepared_format += String.valueOf(colorChar) + c;
-                n -= 2;
-                if (i > seq_end) {
-                  seq_begin = i;
-                }
-                seq_end = i + 1;
-              }
-            }
-          }
-
-          if (c1 == ' ' && i > 0) {
-            end = i;
-          }
-
-          if (n == max_length) {
-            if (end == -1) {
-              if (i - 2 == seq_end || i - 1 == seq_end) {
-                end = seq_begin + i - seq_end - 2;
-              } else {
-                end = i - 1;
-              }
-
-              output.add(format + s.substring(begin, end) + '-');
-            } else {
-              output.add(format + s.substring(begin, end));
-            }
-
-            begin = end;
-            n = i - end;
-            end = -1;
-            format = committed_format;
-          } else {
-            ++n;
-          }
-
-          if (i >= seq_end) {
-            committed_format = prepared_format;
-          }
-        }
-        output.add(format + s.substring(begin));
-        format = prepared_format;
-      }
+  public static String convertToSuperscript(String original) {
+    if (cachedObjectiveNames.containsKey(original)) {
+      return cachedObjectiveNames.get(original);
     }
+    String s = original.toLowerCase();
+    s = s
+        .replaceAll("a", "ᵃ\uF801")
+        .replaceAll("b", "ᵇ\uF801")
+        .replaceAll("c", "ᶜ\uF801")
+        .replaceAll("d", "ᵈ\uF801")
+        .replaceAll("e", "ᵉ\uF801")
+        .replaceAll("f", "ᶠ\uF801")
+        .replaceAll("g", "ᵍ\uF801")
+        .replaceAll("h", "ʰ\uF801")
+        .replaceAll("i", "ᶦ\uF801")
+        .replaceAll("j", "ʲ\uF801")
+        .replaceAll("k", "ᵏ\uF801")
+        .replaceAll("l", "ˡ\uF801")
+        .replaceAll("m", "ᵐ\uF801")
+        .replaceAll("n", "ⁿ\uF801")
+        .replaceAll("o", "ᵒ\uF801")
+        .replaceAll("p", "ᵖ\uF801")
+        .replaceAll("q", "ᵠ\uF801")
+        .replaceAll("r", "ʳ\uF801")
+        .replaceAll("s", "ˢ\uF801")
+        .replaceAll("t", "ᵗ\uF801")
+        .replaceAll("u", "ᵘ\uF801")
+        .replaceAll("v", "ᵛ\uF801")
+        .replaceAll("w", "ʷ\uF801")
+        .replaceAll("x", "ˣ\uF801")
+        .replaceAll("y", "ʸ\uF801")
+        .replaceAll("z", "ᶻ\uF801")
+        .replaceAll("1", "¹\uF801")
+        .replaceAll("2", "²\uF801")
+        .replaceAll("3", "³\uF801")
+        .replaceAll("4", "⁴\uF801")
+        .replaceAll("5", "⁵\uF801")
+        .replaceAll("6", "⁶\uF801")
+        .replaceAll("7", "⁷\uF801")
+        .replaceAll("8", "⁸\uF801")
+        .replaceAll("9", "⁹\uF801")
+        .replaceAll("0", "⁰\uF801")
+        .replaceAll("-", "⁻\uF801")
+        .replaceAll("/", "⃫\uF801")
+        .replaceAll("\\(", "⁽\uF801")
+        .replaceAll("\\)", "⁾\uF801")
+        .replaceAll("'", "՚\uF801")
+        .replaceAll("!", "ᵎ\uF801")
+        .replaceAll("\\?", "ˀ\uF801");
+    cachedObjectiveNames.put(original, s);
+    return s;
+  }
 
+  public static ArrayList<String> wrapAndColor(int maxLineLength, String... input) {
+    ArrayList<String> output = new ArrayList<>();
+
+    for (String line : input) {
+      String[] words = line.split("\\s");
+      StringBuilder currentLine = new StringBuilder(FaceColor.LIGHT_GRAY.s());
+      int length = 0;
+      for (String word : words) {
+        String coloredWord = PaletteUtil.color(TextUtils.color(word));
+        String s = net.md_5.bungee.api.ChatColor.stripColor(word);
+        length += s.length();
+        if (length > maxLineLength) {
+          length = 0;
+          output.add(currentLine.toString());
+          currentLine = new StringBuilder(FaceColor.LIGHT_GRAY + coloredWord + " ");
+        } else {
+          currentLine.append(coloredWord).append(" ");
+        }
+      }
+      output.add(currentLine.toString());
+    }
     return output;
   }
 }
