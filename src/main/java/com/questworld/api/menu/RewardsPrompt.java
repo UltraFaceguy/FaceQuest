@@ -20,7 +20,7 @@ public class RewardsPrompt implements InventoryHolder {
 
   public RewardsPrompt(IQuest quest, Player player) {
     this.quest = quest;
-    inv = Bukkit.createInventory(this, InventoryType.HOPPER, Text.colorize("&0Rewards!"));
+    inv = Bukkit.createInventory(this, InventoryType.HOPPER, " ");
     int offset = 0;
     if (quest.getQuestPoints() > 0 || quest.getMoney() > 0 || quest.getXP() != 0 || StringUtils
         .isNotBlank(quest.getRewardsLore())) {
