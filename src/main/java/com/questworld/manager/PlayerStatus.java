@@ -146,7 +146,9 @@ public class PlayerStatus implements IPlayerStatus {
               continue;
             }
             if (getProgress(quest.getOrderedMissions().get(0)) == 0) {
-              questMap.get(DeluxeCategory.OPEN_QUESTS).add(quest);
+              if (!quest.isHiddenUntilStarted()) {
+                questMap.get(DeluxeCategory.OPEN_QUESTS).add(quest);
+              }
             } else {
               questMap.get(DeluxeCategory.UNFINISHED_QUESTS).add(quest);
             }

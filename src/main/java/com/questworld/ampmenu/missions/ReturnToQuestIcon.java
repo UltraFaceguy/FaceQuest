@@ -16,30 +16,31 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.main;
+package com.questworld.ampmenu.missions;
 
 import com.questworld.QuestWorldPlugin;
-import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class CategoryOpenIcon extends MenuItem {
+public class ReturnToQuestIcon extends MenuItem {
 
-  private final QuestMenu menu;
-  private final DeluxeCategory deluxeCategory;
+  private final MissionListMenu menu;
 
-  public CategoryOpenIcon(QuestMenu menu, DeluxeCategory deluxeCategory) {
-    super("", new ItemStack(Material.TOTEM_OF_UNDYING));
+  ReturnToQuestIcon(MissionListMenu menu) {
+    super(FaceColor.ORANGE + "v  Go Back  v", new ItemStack(Material.BARRIER));
+    ItemStackExtensionsKt.setDisplayName(getIcon(), FaceColor.ORANGE + "vv  Go Back vv");
+    ItemStackExtensionsKt.setCustomModelData(getIcon(), 50);
     this.menu = menu;
-    this.deluxeCategory = deluxeCategory;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    return menu.getIcon(player, deluxeCategory);
+    return getIcon();
   }
 
   @Override
@@ -47,6 +48,7 @@ public class CategoryOpenIcon extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
-    QuestWorldPlugin.get().openQuestList(event.getPlayer(), deluxeCategory);
+    menu.resort(event.getPlayer());
+    QuestWorldPlugin.get().openQuestList(event.getPlayer(), menu.getSelectedCategory());
   }
 }

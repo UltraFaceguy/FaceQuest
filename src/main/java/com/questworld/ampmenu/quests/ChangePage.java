@@ -16,30 +16,44 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.main;
+package com.questworld.ampmenu.quests;
 
-import com.questworld.QuestWorldPlugin;
-import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class CategoryOpenIcon extends MenuItem {
+public class ChangePage extends MenuItem {
 
-  private final QuestMenu menu;
-  private final DeluxeCategory deluxeCategory;
+  private final QuestListMenu menu;
+  private final boolean forward;
 
-  public CategoryOpenIcon(QuestMenu menu, DeluxeCategory deluxeCategory) {
-    super("", new ItemStack(Material.TOTEM_OF_UNDYING));
+  public ChangePage(QuestListMenu menu, boolean forward) {
+    super("", new ItemStack(Material.PAPER));
     this.menu = menu;
-    this.deluxeCategory = deluxeCategory;
+    this.forward = forward;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    return menu.getIcon(player, deluxeCategory);
+    ItemStack stack = getIcon().clone();
+    int currentPage = menu.getCurrentPage();
+    if (forward) {
+      if (menu.getSortedQuests().size() / 21 > currentPage) {
+        ItemStackExtensionsKt.setCustomModelData(stack, 993);
+      } else {
+        return new ItemStack(Material.AIR);
+      }
+    } else {
+      if (currentPage > 0) {
+        ItemStackExtensionsKt.setCustomModelData(stack, 997);
+      } else {
+        return new ItemStack(Material.AIR);
+      }
+    }
+    return stack;
   }
 
   @Override
@@ -47,6 +61,19 @@ public class CategoryOpenIcon extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
-    QuestWorldPlugin.get().openQuestList(event.getPlayer(), deluxeCategory);
+    int currentPage = menu.getCurrentPage();
+    if (forward) {
+      if (menu.getSortedQuests().size() / 21 > currentPage) {
+        menu.resort(event.getPlayer());
+        menu.setCurrentPage(currentPage + 1);
+        event.setWillUpdate(true);
+      }
+    } else {
+      if (currentPage > 0) {
+        menu.resort(event.getPlayer());
+        menu.setCurrentPage(currentPage - 1);
+        event.setWillUpdate(true);
+      }
+    }
   }
 }

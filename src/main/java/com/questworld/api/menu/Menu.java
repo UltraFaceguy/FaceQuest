@@ -38,9 +38,6 @@ public class Menu implements InventoryHolder {
 
 	private Inventory makeInv(int cells) {
 		Inventory inv = Bukkit.createInventory(this, cells, StringUtils.isBlank(title) ? "" : title);
-		for (int i = 0; i < cells; i++) {
-			inv.setItem(i, DeluxeQuestBook.blankSlot.clone());
-		}
 		return inv;
 	}
 

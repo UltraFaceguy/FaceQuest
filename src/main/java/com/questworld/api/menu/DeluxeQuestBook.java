@@ -25,15 +25,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class DeluxeQuestBook {
 
-  public static ItemStack blankSlot = buildBlank();
   public static ItemStack lockedSlot = buildLocked();
-
-  private static ItemStack buildBlank() {
-    blankSlot = new ItemStack(Material.IRON_BARS);
-    ItemStackExtensionsKt.setCustomModelData(blankSlot, 99);
-    ItemStackExtensionsKt.setDisplayName(blankSlot, "" + ChatColor.BLACK);
-    return blankSlot;
-  }
 
   private static ItemStack buildLocked() {
     lockedSlot = new ItemStack(Material.PAPER);

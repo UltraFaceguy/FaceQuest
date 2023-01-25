@@ -1,7 +1,10 @@
 package com.questworld;
 
 import com.questworld.ampmenu.main.QuestMenu;
+import com.questworld.ampmenu.missions.MissionListMenu;
+import com.questworld.ampmenu.quests.QuestListMenu;
 import com.questworld.api.contract.ICategory;
+import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
 import com.questworld.api.contract.IQuest;
 import com.questworld.api.contract.QuestingAPI;
 import com.questworld.command.ClickCommand;
@@ -16,6 +19,8 @@ import com.questworld.util.Log;
 import com.questworld.util.TransientPermissionUtil;
 import info.faceland.loot.utils.MaterialUtil;
 import java.text.DecimalFormat;
+import java.util.Map;
+import java.util.WeakHashMap;
 import lombok.Getter;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
@@ -39,6 +44,8 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
   @Getter
   private QuestMenu questMenu;
+  private final Map<Player, QuestListMenu> questListMenus = new WeakHashMap<>();
+  private final Map<Player, MissionListMenu> missionListMenus = new WeakHashMap<>();
 
   public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###");
 
@@ -61,6 +68,9 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     _INSTANCE = this;
     api = new QuestingImpl(this);
     api.load();
+
+    questListMenus.clear();
+    missionListMenus.clear();
 
     loadConfigs();
 
@@ -151,6 +161,25 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
     getServer().getServicesManager().unregisterAll(this);
     getServer().getScheduler().cancelTasks(this);
+  }
+
+  public void openQuestList(Player player, DeluxeCategory deluxeCategory) {
+    if (!questListMenus.containsKey(player)) {
+      questListMenus.put(player, new QuestListMenu(this));
+    }
+    questListMenus.get(player).setDeluxeCategory(deluxeCategory);
+    questListMenus.get(player).resort(player);
+    questListMenus.get(player).open(player);
+  }
+
+  public void openMissionList(Player player, DeluxeCategory deluxeCategory, IQuest quest) {
+    if (!missionListMenus.containsKey(player)) {
+      missionListMenus.put(player, new MissionListMenu(this));
+    }
+    missionListMenus.get(player).setSelectedQuest(quest);
+    missionListMenus.get(player).setSelectedCategory(deluxeCategory);
+    missionListMenus.get(player).resort(player);
+    missionListMenus.get(player).open(player);
   }
 
   private boolean setupPermissions() {

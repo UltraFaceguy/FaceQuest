@@ -1,45 +1,69 @@
 /**
  * The MIT License Copyright (c) 2015 Teal Cube Games
- *
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge, publish, distribute,
  * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
  * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.main;
+package com.questworld.ampmenu.missions.status;
 
-import com.questworld.QuestWorldPlugin;
-import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
+import static com.questworld.QuestWorldPlugin.INT_FORMAT;
+import static com.questworld.util.PlayerTools.getStrifeExpFromPercentage;
+
+import com.questworld.ampmenu.missions.MissionListMenu;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
+import java.util.List;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class CategoryOpenIcon extends MenuItem {
+public class ExperienceDisplay extends MenuItem {
 
-  private final QuestMenu menu;
-  private final DeluxeCategory deluxeCategory;
+  private final MissionListMenu menu;
 
-  public CategoryOpenIcon(QuestMenu menu, DeluxeCategory deluxeCategory) {
+  public ExperienceDisplay(MissionListMenu menu) {
     super("", new ItemStack(Material.TOTEM_OF_UNDYING));
     this.menu = menu;
-    this.deluxeCategory = deluxeCategory;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    return menu.getIcon(player, deluxeCategory);
+    double xp = menu.getSelectedQuest().getXP();
+    if (xp == 0) {
+      return new ItemStack(Material.AIR);
+    }
+    String xpDisplay;
+    if (xp > 0) {
+      xpDisplay = INT_FORMAT.format(xp);
+    } else {
+      xpDisplay = INT_FORMAT.format(
+          getStrifeExpFromPercentage(menu.getSelectedQuest().getModifiedLevelRequirement(), xp));
+    }
+    ItemStack stack = new ItemStack(Material.PAPER);
+    ItemStackExtensionsKt.setCustomModelData(stack, 1012);
+    ItemStackExtensionsKt.setDisplayName(stack, FaceColor.LIGHT_GREEN + FaceColor.BOLD.s() +
+        "Experience Rewards");
+    TextUtils.setLore(stack, PaletteUtil.color(List.of(
+        "",
+        "|lgreen|" + xpDisplay + " Combat XP"
+    )), false);
+    return stack;
   }
 
   @Override
@@ -47,6 +71,5 @@ public class CategoryOpenIcon extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
-    QuestWorldPlugin.get().openQuestList(event.getPlayer(), deluxeCategory);
   }
 }

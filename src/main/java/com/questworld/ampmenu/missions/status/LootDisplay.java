@@ -16,30 +16,55 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.main;
+package com.questworld.ampmenu.missions.status;
 
-import com.questworld.QuestWorldPlugin;
-import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
+import static com.questworld.QuestWorldPlugin.INT_FORMAT;
+
+import com.questworld.ampmenu.missions.MissionListMenu;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
+import java.util.ArrayList;
+import java.util.List;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class CategoryOpenIcon extends MenuItem {
+public class LootDisplay extends MenuItem {
 
-  private final QuestMenu menu;
-  private final DeluxeCategory deluxeCategory;
+  private final MissionListMenu menu;
 
-  public CategoryOpenIcon(QuestMenu menu, DeluxeCategory deluxeCategory) {
+  public LootDisplay(MissionListMenu menu) {
     super("", new ItemStack(Material.TOTEM_OF_UNDYING));
     this.menu = menu;
-    this.deluxeCategory = deluxeCategory;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    return menu.getIcon(player, deluxeCategory);
+    int money = menu.getSelectedQuest().getMoney();
+    List<ItemStack> items = menu.getSelectedQuest().getRewards();
+    if (money < 1 && items.isEmpty()) {
+      return new ItemStack(Material.AIR);
+    }
+
+    ItemStack stack = new ItemStack(Material.PAPER);
+    ItemStackExtensionsKt.setCustomModelData(stack, 1011);
+      ItemStackExtensionsKt.setDisplayName(stack, FaceColor.ORANGE + FaceColor.BOLD.s() +
+        "Loot Rewards");
+
+    List<String> lore = new ArrayList<>();
+    lore.add("");
+    for (ItemStack s : items) {
+      lore.add(FaceColor.WHITE.s() + s.getAmount() + "x " + ItemStackExtensionsKt.getDisplayName(s));
+    }
+    if (money > 0) {
+      lore.add(FaceColor.YELLOW.s() + INT_FORMAT.format(money) + ChatColor.YELLOW + "◎");
+    }
+    TextUtils.setLore(stack, lore, false);
+    return stack;
   }
 
   @Override
@@ -47,6 +72,5 @@ public class CategoryOpenIcon extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
-    QuestWorldPlugin.get().openQuestList(event.getPlayer(), deluxeCategory);
   }
 }

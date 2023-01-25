@@ -11,6 +11,7 @@ import com.questworld.api.event.CancellableEvent;
 import com.questworld.api.event.QuestCompleteEvent;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
@@ -485,18 +486,23 @@ class Quest extends UniqueObject implements IQuestState {
     ItemStackExtensionsKt.setDisplayName(info, TextUtils.color("&f&lQuest Rewards!"));
     List<String> lore = new ArrayList<>();
     if (questPoints > 0) {
-      lore.add("&b" + questPoints + " Quest Point(s)");
+      lore.add(FaceColor.CYAN.s() + questPoints + " Quest Point(s)");
     }
     if (money > 0) {
-      lore.add("&e" + FORMAT.format(money) + "◎");
+      lore.add(FaceColor.YELLOW.s() + FORMAT.format(money) + ChatColor.YELLOW + "◎");
     }
     if (xp > 0) {
-      lore.add("&a" + FORMAT.format((int) xp) + " Combat XP");
+      lore.add(FaceColor.LIGHT_GREEN.s() + FORMAT.format((int) xp) + " Combat XP");
     } else if (xp < 0) {
-      lore.add("&a" + FORMAT.format(getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp)) + " Combat XP");
+      lore.add(FaceColor.LIGHT_GREEN.s() + FORMAT.format(getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp)) + " Combat XP");
     }
     if (StringUtils.isNotBlank(rewardsLore)) {
-      lore.addAll(Arrays.asList(rewardsLore.split("\\|")));
+      lore.addAll(TextUtils.color(Arrays.asList(rewardsLore.split("\\|"))));
+    }
+    if (lore.isEmpty()) {
+      lore.add(FaceColor.LIGHT_GRAY + "Uhhh...");
+      lore.add(FaceColor.LIGHT_GRAY + "A good adventure is");
+      lore.add(FaceColor.LIGHT_GRAY + "its own reward..?");
     }
     TextUtils.setLore(info, TextUtils.color(lore));
     return info;

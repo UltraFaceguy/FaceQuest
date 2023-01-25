@@ -16,8 +16,4 @@ public class DeluxeQuestsCommand implements CommandExecutor {
 		}
 		return true;
 	}
-
-  public static void openNewQuestBook(Player p) {
-		DeluxeQuestBook.openMainMenu(p);
-	}
 }

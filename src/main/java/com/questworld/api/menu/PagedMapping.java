@@ -127,10 +127,6 @@ public class PagedMapping {
 	private void build(Menu menu, int page, boolean alwaysShowPages) {
 		currentPage = page;
 
-		for (int i = 0; i < menu.getInventory().getSize(); i++) {
-			menu.getInventory().setItem(i, DeluxeQuestBook.blankSlot.clone());
-		}
-
 		panels.get(page).build(menu, 9, pageSize);
 
 		String[] lines = QuestWorld.translate(Translation.NAV_ITEM, String.valueOf(page + 1),
