@@ -29,10 +29,12 @@ import com.questworld.api.menu.RewardsPrompt;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
+import land.face.waypointer.WaypointerPlugin;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 public class QuestIcon extends MenuItem {
@@ -115,12 +117,27 @@ public class QuestIcon extends MenuItem {
     if (currentQuest == null) {
       return;
     }
-    IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());
-    QuestStatus questStatus = playerStatus.getStatus(currentQuest);
-    if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
-      new RewardsPrompt(currentQuest, event.getPlayer());
-    } else {
-      QuestWorldPlugin.get().openMissionList(event.getPlayer(), menu.getDeluxeCategory(), currentQuest);
+    if (event.getClickType() == ClickType.LEFT || event.getClickType() == ClickType.SHIFT_LEFT) {
+      IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());
+      QuestStatus questStatus = playerStatus.getStatus(currentQuest);
+      if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
+        new RewardsPrompt(currentQuest, event.getPlayer());
+      } else {
+        QuestWorldPlugin.get()
+            .openMissionList(event.getPlayer(), menu.getDeluxeCategory(), currentQuest);
+      }
+    } else if (event.getClickType() == ClickType.RIGHT || event.getClickType() == ClickType.SHIFT_RIGHT) {
+      IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());
+      for (IMission mission : currentQuest.getOrderedMissions()) {
+        if (playerStatus.hasCompletedTask(mission)) {
+          continue;
+        }
+        if (StringUtils.isBlank(mission.getWaypointerId())) {
+          continue;
+        }
+        WaypointerPlugin.getInstance().getWaypointManager()
+            .setWaypoint(event.getPlayer(), mission.getWaypointerId());
+      }
     }
   }
 }

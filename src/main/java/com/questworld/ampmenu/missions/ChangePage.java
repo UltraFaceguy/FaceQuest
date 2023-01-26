@@ -24,6 +24,7 @@ import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 public class ChangePage extends MenuItem {
@@ -64,6 +65,9 @@ public class ChangePage extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
+    if (event.getClickType() == ClickType.DOUBLE_CLICK) {
+      return;
+    }
     int currentPage = menu.getCurrentPage();
     if (forward) {
       if (menu.getSelectedQuest().getOrderedMissions().size() / 21 > currentPage) {
