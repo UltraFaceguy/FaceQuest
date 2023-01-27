@@ -137,6 +137,7 @@ public class QuestIcon extends MenuItem {
         }
         WaypointerPlugin.getInstance().getWaypointManager()
             .setWaypoint(event.getPlayer(), mission.getWaypointerId());
+        return;
       }
     }
   }
