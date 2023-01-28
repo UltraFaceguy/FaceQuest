@@ -132,12 +132,11 @@ public class QuestIcon extends MenuItem {
         if (playerStatus.hasCompletedTask(mission)) {
           continue;
         }
-        if (StringUtils.isBlank(mission.getWaypointerId())) {
-          continue;
+        if (!StringUtils.isBlank(mission.getWaypointerId())) {
+          WaypointerPlugin.getInstance().getWaypointManager()
+              .setWaypoint(event.getPlayer(), mission.getWaypointerId());
+          return;
         }
-        WaypointerPlugin.getInstance().getWaypointManager()
-            .setWaypoint(event.getPlayer(), mission.getWaypointerId());
-        return;
       }
     }
   }

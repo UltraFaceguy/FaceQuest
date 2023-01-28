@@ -19,6 +19,8 @@
 package com.questworld.ampmenu.missions.status;
 
 import com.questworld.ampmenu.missions.MissionListMenu;
+import com.questworld.api.QuestWorld;
+import com.questworld.api.contract.IPlayerStatus;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
 import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
@@ -47,9 +49,31 @@ public class CooldownDisplay extends MenuItem {
       ItemStackExtensionsKt.setCustomModelData(stack, 1009);
       ItemStackExtensionsKt.setDisplayName(stack, FaceColor.CYAN + FaceColor.BOLD.s() +
           "Quest Cooldown");
+      IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
+      long timeDiff = playerStatus.getCooldownEnd(menu.getSelectedQuest()) - System.currentTimeMillis();
+      String timeDisplay;
+      if (timeDiff <= 0) {
+        timeDisplay = FaceColor.LIME + "RIGHT NOW!";
+      } else {
+        timeDisplay = FaceColor.YELLOW.s();
+        int days = (int) (timeDiff / 86400000);
+        timeDiff -= days * 86400000L;
+        int hours = (int) (timeDiff / 3600000);
+        timeDiff -= days * 3600000L;
+        int mins = (int) ((timeDiff % 3600000) / 60000);
+        if (days > 0) {
+          timeDisplay += days + "D ";
+        }
+        if (hours > 0) {
+          timeDisplay += hours + "H ";
+        }
+        timeDisplay += mins + "M ";
+      }
       TextUtils.setLore(stack, PaletteUtil.color(List.of(
           "|lgray|This quest can be completed",
-          "|lgray|again every |white|" + (cd / 3600000) + "|lgray| hours!"
+          "|lgray|again every |white|" + (cd / 3600000) + "|lgray| hours!",
+          "",
+          "|lgray|Ready in: " + timeDisplay
       )), false);
       return stack;
     }
