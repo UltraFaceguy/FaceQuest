@@ -21,6 +21,8 @@ import info.faceland.loot.utils.MaterialUtil;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.WeakHashMap;
+import land.face.potions.PotionPlugin;
+import land.face.potions.data.Potion;
 import lombok.Getter;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
@@ -106,6 +108,10 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
           for (ItemStack stack : q.getRewards()) {
             try {
               MaterialUtil.updateItem(stack);
+              Potion potion = PotionPlugin.getInstance().getPotionManager().getPotionFromStack(stack);
+              if (potion != null) {
+                PotionPlugin.getInstance().getPotionManager().updateItemStack(stack, potion);
+              }
             } catch (Exception e) {
               Bukkit.getLogger().warning("[FaceQuest] Exception updating item for " + q.getName());
               Bukkit.getLogger().warning("[FaceQuest] stack: " + e);
@@ -167,6 +173,12 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     if (!questListMenus.containsKey(player)) {
       questListMenus.put(player, new QuestListMenu(this));
     }
+    else {
+      if (questListMenus.get(player).getDeluxeCategory() != deluxeCategory) {
+        questListMenus.get(player).setCurrentPage(0);
+      }
+    }
+    questListMenus.get(player).setCurrentPage(0);
     questListMenus.get(player).setDeluxeCategory(deluxeCategory);
     questListMenus.get(player).resort(player);
     questListMenus.get(player).open(player);
@@ -175,6 +187,10 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
   public void openMissionList(Player player, DeluxeCategory deluxeCategory, IQuest quest) {
     if (!missionListMenus.containsKey(player)) {
       missionListMenus.put(player, new MissionListMenu(this));
+    } else {
+      if (missionListMenus.get(player).getSelectedCategory() != deluxeCategory) {
+        missionListMenus.get(player).setCurrentPage(0);
+      }
     }
     missionListMenus.get(player).setSelectedQuest(quest);
     missionListMenus.get(player).setSelectedCategory(deluxeCategory);

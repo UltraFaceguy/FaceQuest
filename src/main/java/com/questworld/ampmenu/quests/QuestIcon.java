@@ -64,6 +64,9 @@ public class QuestIcon extends MenuItem {
     boolean hasCompletedAnyMission = false;
     String waypointerId = "";
     for (IMission mission : quest.getOrderedMissions()) {
+      if (!playerStatus.hasUnlockedTask(mission)) {
+        continue;
+      }
       if (playerStatus.hasCompletedTask(mission)) {
         completedMissions++;
         hasCompletedAnyMission = true;

@@ -465,7 +465,7 @@ public class PlayerStatus implements IPlayerStatus {
           actionBar += " (" + amount + "/" + task.getAmount() + ")";
         }
       }
-      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 5, 0, actionBar, 100);
+      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, actionBar, 100);
     }
 
     if (complete) {
@@ -486,7 +486,7 @@ public class PlayerStatus implements IPlayerStatus {
               Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
           String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
               ChatColor.stripColor(task.getQuest().getName());
-          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 5, 0, actionBar, 100);
+          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, actionBar, 100);
 
           MessageUtils.sendMessage(player,
               "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
@@ -510,7 +510,7 @@ public class PlayerStatus implements IPlayerStatus {
         if (nextTask != null) {
           String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
               ChatColor.stripColor(task.getQuest().getName());
-          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 5, 0, actionBar, 100);
+          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, actionBar, 100);
 
           MessageUtils.sendMessage(player,
               "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
