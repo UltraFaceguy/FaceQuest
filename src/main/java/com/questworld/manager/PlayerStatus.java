@@ -19,7 +19,10 @@ import com.questworld.quest.WeightComparator;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 import com.questworld.util.TransientPermissionUtil;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor.ShaderStyle;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
@@ -30,16 +33,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import land.face.SnazzyPartiesPlugin;
-import land.face.data.Party;
 import land.face.strife.StrifePlugin;
 import land.face.waypointer.WaypointerPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -54,6 +53,10 @@ public class PlayerStatus implements IPlayerStatus {
   private boolean inDialogue = false;
   private final UUID playerUUID;
   private final ProgressTracker tracker;
+
+  private static final String UPDATED_PREFIX = FaceColor.LIGHT_GREEN
+      .shaded(ShaderStyle.OUTLINE) + "[Updated] ";
+  private static final String NEW_OBJ = PaletteUtil.color("|orange_outline|New Objective! |yellow|");
 
   public PlayerStatus(UUID uuid) {
     this.playerUUID = uuid;
@@ -432,12 +435,12 @@ public class PlayerStatus implements IPlayerStatus {
     if (!currentTask.getQuest().getOrdered()) {
       return null;
     }
-    Iterator iterator = currentTask.getQuest().getOrderedMissions().iterator();
+    Iterator<? extends IMission> iterator = currentTask.getQuest().getOrderedMissions().iterator();
     while (iterator.hasNext()) {
-      IMission task = (IMission) iterator.next();
+      IMission task = iterator.next();
       if (currentTask == task) {
         if (iterator.hasNext()) {
-          return (IMission) iterator.next();
+          return iterator.next();
         }
       }
     }
@@ -445,34 +448,34 @@ public class PlayerStatus implements IPlayerStatus {
   }
 
   private void setSingleProgress(IMission task, int amount) {
+    if (getProgress(task) == amount) {
+      return;
+    }
     amount = Math.min(amount, task.getAmount());
     if (!updateTimeframe(task, amount)) {
       return;
     }
-
     tracker.setMissionProgress(task, amount);
-
-    boolean complete = amount == task.getAmount();
-
-    if (isMissionActive(task) && task.getActionBarUpdates()) {
+    if (isMissionActive(task)) {
       String actionBar;
-      String text = ChatColor.stripColor(task.getQuest().getName());
-      if (complete) {
-        actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.YELLOW + text;
-      } else {
-        actionBar = ChatColor.AQUA + text;
-        if (task.getAmount() > 1) {
-          actionBar += " (" + amount + "/" + task.getAmount() + ")";
+      String text = ChatColor.stripColor(task.getDisplayName());
+      actionBar = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + text;
+      if (task.getAmount() > 1) {
+        if (amount >= task.getAmount()) {
+          actionBar = UPDATED_PREFIX + FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + ChatColor.stripColor(task.getQuest().getName());
+        } else {
+          if (task.getActionBarUpdates()) {
+            actionBar += " (" + amount + "/" + task.getAmount() + ")";
+          }
         }
       }
-      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, actionBar, 100);
+      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
     }
-
+    boolean complete = amount >= task.getAmount();
     if (complete) {
       Bukkit.getPluginManager().callEvent(new MissionCompletedEvent(task));
       sendDialogue(this, task, task.getDialogue().iterator());
     }
-
     TransientPermissionUtil.updateTransientPerms(getPlayer(), this, task.getQuest());
   }
 
@@ -484,12 +487,9 @@ public class PlayerStatus implements IPlayerStatus {
         if (nextTask != null) {
           PlayerTools.sendTranslation(player, false,
               Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
-          String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
-              ChatColor.stripColor(task.getQuest().getName());
-          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, actionBar, 100);
-
-          MessageUtils.sendMessage(player,
-              "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
+          PaletteUtil.sendMessage(player, NEW_OBJ +
+              ChatColor.stripColor(nextTask.getDisplayName()));
+          sendThing(getNextTask(task), player);
           Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
               () -> updateQuestWaypoint(nextTask, player), 50L);
         }
@@ -502,23 +502,35 @@ public class PlayerStatus implements IPlayerStatus {
         Bukkit.getScheduler().scheduleSyncDelayedTask(QuestWorld.getPlugin(),
             () -> sendDialogue(status, task, dialogue), 50L);
       } else {
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-        PlayerTools.sendTranslation(player, false,
-            Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
-        status.update();
-        IMission nextTask = getNextTask(task);
-        if (nextTask != null) {
-          String actionBar = ChatColor.GREEN + "(Updated) " + ChatColor.AQUA +
-              ChatColor.stripColor(task.getQuest().getName());
-          StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, actionBar, 100);
 
-          MessageUtils.sendMessage(player,
-              "&e&lNew Objective! &e" + ChatColor.stripColor(nextTask.getDisplayName()));
-          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-              () -> updateQuestWaypoint(nextTask, player), 50L);
-        }
+        status.update();
+        sendThing(getNextTask(task), player);
       }
     });
+  }
+
+  public static void notifyCompleted(IMission task, Player player) {
+    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
+    PlayerTools.sendTranslation(player, false,
+        Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
+  }
+
+  public static void sendProgressStatus(IMission task, Player player) {
+    if (task != null) {
+      String s = ChatColor.stripColor(task.getDisplayName());
+      MessageUtils.sendMessage(player, NEW_OBJ + s);
+      String notif = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + s;
+      if (task.getAmount() > 1 && task.getActionBarUpdates()) {
+        notif += " (0/" + task.getAmount() + ")";
+      }
+      StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
+
+    }
+  }
+
+  public static void setWaypoint(final Player p, IMission task, int delay) {
+    Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
+        () -> updateQuestWaypoint(task, p), delay);
   }
 
   private static void sendDialogueComponent(Player player, String line) {
@@ -552,6 +564,8 @@ public class PlayerStatus implements IPlayerStatus {
         setProgress(task, 0);
       }
     }
+    // CLEAR QUEST BAR
+    StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, "", 2);
     updateQuestPoints();
     TransientPermissionUtil.updateTransientPerms(getPlayer(), this, quest);
   }

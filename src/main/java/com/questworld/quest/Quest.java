@@ -9,6 +9,7 @@ import com.questworld.api.contract.IQuest;
 import com.questworld.api.contract.IQuestState;
 import com.questworld.api.event.CancellableEvent;
 import com.questworld.api.event.QuestCompleteEvent;
+import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;

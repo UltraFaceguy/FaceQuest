@@ -25,7 +25,9 @@ import com.questworld.api.Translation;
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IQuest;
+import com.questworld.api.menu.DeluxeQuestBook;
 import com.questworld.api.menu.RewardsPrompt;
+import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
@@ -135,11 +137,9 @@ public class QuestIcon extends MenuItem {
         if (playerStatus.hasCompletedTask(mission)) {
           continue;
         }
-        if (!StringUtils.isBlank(mission.getWaypointerId())) {
-          WaypointerPlugin.getInstance().getWaypointManager()
-              .setWaypoint(event.getPlayer(), mission.getWaypointerId());
-          return;
-        }
+        PlayerStatus.setWaypoint(event.getPlayer(), mission, 0);
+        PlayerStatus.sendProgressStatus(mission, event.getPlayer());
+        return;
       }
     }
   }

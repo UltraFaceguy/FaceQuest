@@ -1,6 +1,7 @@
 package com.questworld.api.contract;
 
 import com.questworld.api.annotation.NoImpl;
+import com.questworld.manager.PlayerStatus;
 import java.util.Collection;
 import java.util.List;
 import org.bukkit.entity.Player;

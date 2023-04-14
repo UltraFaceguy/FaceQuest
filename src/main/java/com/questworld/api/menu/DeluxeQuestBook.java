@@ -16,7 +16,6 @@ import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.List;
 import java.util.Map;
-import land.face.waypointer.WaypointerPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -87,6 +86,7 @@ public class DeluxeQuestBook {
       float completedMissions = 0;
       boolean hasCompletedAnyMission = false;
       String waypointerId = "";
+      IMission savedMission = null;
       for (IMission mission : quest.getOrderedMissions()) {
         if (!playerStatus.hasUnlockedTask(mission)) {
           continue;
@@ -100,6 +100,7 @@ public class DeluxeQuestBook {
         if (StringUtils.isBlank(mission.getWaypointerId())) {
           continue;
         }
+        savedMission = mission;
         waypointerId = mission.getWaypointerId();
         break;
       }
@@ -127,7 +128,7 @@ public class DeluxeQuestBook {
               progressNum).get(),
             event -> openQuest((Player) event.getWhoClicked(), quest, deluxeCategory, true), true);
       } else {
-        String finalWaypointerId = waypointerId;
+        IMission finalSavedMission = savedMission;
         view.addButton(index,
             new ItemBuilder(quest.getItem()).wrapText(
                 quest.getName(),
@@ -137,7 +138,7 @@ public class DeluxeQuestBook {
                 "", "&b> Right-click to set waypoint! <").get(),
             event -> {
               if (event.getClick() == ClickType.RIGHT) {
-                setWaypoint((Player) event.getWhoClicked(), finalWaypointerId);
+                setWaypoint((Player) event.getWhoClicked(), finalSavedMission);
               } else {
                 openQuest((Player) event.getWhoClicked(), quest, deluxeCategory, true);
               }
@@ -147,10 +148,6 @@ public class DeluxeQuestBook {
     }
     view.build(menu, p, alwaysShowPages);
     menu.openFor(p);
-  }
-
-  public static void setWaypoint(final Player p, final String waypointerId) {
-    WaypointerPlugin.getInstance().getWaypointManager().setWaypoint(p, waypointerId);
   }
 
   public static void openQuest(final Player p, final IQuest quest, final DeluxeCategory category,
@@ -247,7 +244,7 @@ public class DeluxeQuestBook {
       view.addButton(index, item, event -> {
         if (event.getClick() == ClickType.RIGHT && StringUtils
             .isNotBlank(mission.getWaypointerId())) {
-          setWaypoint((Player) event.getWhoClicked(), mission.getWaypointerId());
+          setWaypoint((Player) event.getWhoClicked(), mission);
           return;
         }
         if (!manager.hasUnlockedTask(mission)) {
