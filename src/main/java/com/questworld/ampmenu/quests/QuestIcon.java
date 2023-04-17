@@ -25,13 +25,11 @@ import com.questworld.api.Translation;
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IQuest;
-import com.questworld.api.menu.DeluxeQuestBook;
 import com.questworld.api.menu.RewardsPrompt;
 import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
-import land.face.waypointer.WaypointerPlugin;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
@@ -63,7 +61,6 @@ public class QuestIcon extends MenuItem {
     QuestStatus questStatus = playerStatus.getStatus(quest);
     int maxMissions = quest.getMissions().size();
     float completedMissions = 0;
-    boolean hasCompletedAnyMission = false;
     String waypointerId = "";
     for (IMission mission : quest.getOrderedMissions()) {
       if (!playerStatus.hasUnlockedTask(mission)) {
@@ -71,7 +68,6 @@ public class QuestIcon extends MenuItem {
       }
       if (playerStatus.hasCompletedTask(mission)) {
         completedMissions++;
-        hasCompletedAnyMission = true;
         continue;
       }
       completedMissions += (float) playerStatus.getProgress(mission) / mission.getAmount();
@@ -128,8 +124,8 @@ public class QuestIcon extends MenuItem {
       if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
         new RewardsPrompt(currentQuest, event.getPlayer());
       } else {
-        QuestWorldPlugin.get()
-            .openMissionList(event.getPlayer(), menu.getDeluxeCategory(), currentQuest);
+        QuestWorldPlugin.get().openMissionList(event.getPlayer(),
+            menu.getDeluxeCategory(), currentQuest);
       }
     } else if (event.getClickType() == ClickType.RIGHT || event.getClickType() == ClickType.SHIFT_RIGHT) {
       IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());
@@ -137,8 +133,8 @@ public class QuestIcon extends MenuItem {
         if (playerStatus.hasCompletedTask(mission)) {
           continue;
         }
-        PlayerStatus.setWaypoint(event.getPlayer(), mission, 0);
-        PlayerStatus.sendProgressStatus(mission, event.getPlayer());
+        PlayerStatus.sendWaypoint(event.getPlayer(), mission, 0);
+        playerStatus.sendProgressStatus(mission, event.getPlayer());
         return;
       }
     }

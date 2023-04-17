@@ -1,7 +1,6 @@
 package com.questworld.command;
 
 import com.questworld.QuestWorldPlugin;
-import com.questworld.api.menu.DeluxeQuestBook;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

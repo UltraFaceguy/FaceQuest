@@ -1,6 +1,5 @@
 package com.questworld.command;
 
-import com.questworld.api.menu.DeluxeQuestBook;
 import java.util.Locale;
 
 import org.bukkit.command.Command;
@@ -114,8 +113,4 @@ public class QuestsCommand implements CommandExecutor {
 			}
     }
   }
-
-  public static void openNewQuestBook(Player p) {
-		DeluxeQuestBook.openMainMenu(p);
-	}
 }

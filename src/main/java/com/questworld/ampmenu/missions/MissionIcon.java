@@ -18,18 +18,17 @@
  */
 package com.questworld.ampmenu.missions;
 
-import static com.questworld.api.menu.DeluxeQuestBook.lockedSlot;
-
 import com.questworld.api.Manual;
 import com.questworld.api.QuestWorld;
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
-import com.questworld.api.menu.DeluxeQuestBook;
 import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
+import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
-import land.face.waypointer.WaypointerPlugin;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
+import java.util.List;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
 import org.bukkit.Material;
@@ -41,6 +40,16 @@ public class MissionIcon extends MenuItem {
 
   private final MissionListMenu menu;
   private final int index;
+
+  public static ItemStack lockedSlot = buildLocked();
+
+  private static ItemStack buildLocked() {
+    lockedSlot = new ItemStack(Material.PAPER);
+    ItemStackExtensionsKt.setCustomModelData(lockedSlot, 998);
+    ItemStackExtensionsKt.setDisplayName(lockedSlot, TextUtils.color("&7&kSOMEWEIRDMISSION"));
+    TextUtils.setLore(lockedSlot, List.of(TextUtils.color("&4&l[ LOCKED ]")));
+    return lockedSlot;
+  }
 
   MissionIcon(MissionListMenu menu, int index) {
     super("", new ItemStack(Material.TOTEM_OF_UNDYING));
@@ -99,8 +108,9 @@ public class MissionIcon extends MenuItem {
       return;
     }
     if (event.getClickType() == ClickType.RIGHT) {
-      PlayerStatus.setWaypoint(event.getPlayer(), mission, 0);
-      PlayerStatus.sendProgressStatus(mission, event.getPlayer());
+      IPlayerStatus manager = QuestWorld.getPlayerStatus(event.getPlayer());
+      PlayerStatus.sendWaypoint(event.getPlayer(), mission, 0);
+      manager.sendProgressStatus(mission, event.getPlayer());
     }
   }
 }

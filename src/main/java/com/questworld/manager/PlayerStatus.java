@@ -21,9 +21,7 @@ import com.questworld.util.Text;
 import com.questworld.util.TransientPermissionUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor.ShaderStyle;
-import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
-import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
@@ -42,7 +40,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.InventoryHolder;
 
 public class PlayerStatus implements IPlayerStatus {
@@ -54,9 +51,14 @@ public class PlayerStatus implements IPlayerStatus {
   private final UUID playerUUID;
   private final ProgressTracker tracker;
 
-  private static final String UPDATED_PREFIX = FaceColor.LIGHT_GREEN
-      .shaded(ShaderStyle.OUTLINE) + "[Updated] ";
-  private static final String NEW_OBJ = PaletteUtil.color("|orange_outline|New Objective! |yellow|");
+  private static final String UPDATED_PREFIX =
+      FaceColor.LIGHT_GREEN.shaded(ShaderStyle.OUTLINE) + "[Updated] ";
+  private static final String UPDATED_OBJ = PaletteUtil.color(
+      "|lgreen_outline|Quest Updated! |yellow|");
+  private static final String COMPLETE_OBJ = PaletteUtil.color(
+      "|lgreen_outline|Quest Complete! |yellow|");
+  private static final String NEW_OBJ = PaletteUtil.color(
+      "|orange_outline|New Objective! |yellow|");
 
   public PlayerStatus(UUID uuid) {
     this.playerUUID = uuid;
@@ -312,15 +314,13 @@ public class PlayerStatus implements IPlayerStatus {
 
           if (finished) {
             TitleUtils.sendTitle(p,
-                TextUtils.color("&bQUEST COMPLETE!"),
-                TextUtils.color("&bCompleted: &f" + ChatColor.stripColor(quest.getName())));
+                PaletteUtil.color("|yellow_bounce|QUEST COMPLETE!"),
+                PaletteUtil.color("|orange_wave|Completed: |white_wave|" + ChatColor.stripColor(quest.getName())));
             p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
             tracker.setQuestFinished(quest, true);
             if (!quest.getAutoClaimed()) {
               tracker.setQuestStatus(quest, QuestStatus.REWARD_CLAIMABLE);
-              if (p.getOpenInventory().getType() != InventoryType.PLAYER) {
-                new RewardsPrompt(quest, p);
-              }
+              new RewardsPrompt(quest, p);
             } else {
               quest.completeFor(p);
             }
@@ -424,13 +424,6 @@ public class PlayerStatus implements IPlayerStatus {
     setSingleProgress(task, amount);
   }
 
-  private static void updateQuestWaypoint(IMission task, Player player) {
-    if (StringUtils.isNotBlank(task.getWaypointerId())) {
-      WaypointerPlugin.getInstance().getWaypointManager()
-          .setWaypoint(player, task.getWaypointerId());
-    }
-  }
-
   public static IMission getNextTask(IMission currentTask) {
     if (!currentTask.getQuest().getOrdered()) {
       return null;
@@ -462,14 +455,17 @@ public class PlayerStatus implements IPlayerStatus {
       actionBar = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + text;
       if (task.getAmount() > 1) {
         if (amount >= task.getAmount()) {
-          actionBar = UPDATED_PREFIX + FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + ChatColor.stripColor(task.getQuest().getName());
+          actionBar =
+              UPDATED_PREFIX + FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + ChatColor.stripColor(
+                  task.getQuest().getName());
         } else {
           if (task.getActionBarUpdates()) {
             actionBar += " (" + amount + "/" + task.getAmount() + ")";
           }
         }
       }
-      StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
+      StrifePlugin.getInstance().getBossBarManager()
+          .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
     }
     boolean complete = amount >= task.getAmount();
     if (complete) {
@@ -484,15 +480,9 @@ public class PlayerStatus implements IPlayerStatus {
     ifOnline(status.playerUUID).ifPresent(player -> {
       if (task.getType().getName().equals("CITIZENS_INTERACT")) {
         IMission nextTask = getNextTask(task);
-        if (nextTask != null) {
-          PlayerTools.sendTranslation(player, false,
-              Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
-          PaletteUtil.sendMessage(player, NEW_OBJ +
-              ChatColor.stripColor(nextTask.getDisplayName()));
-          sendThing(getNextTask(task), player);
-          Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-              () -> updateQuestWaypoint(nextTask, player), 50L);
-        }
+        sendStatusToChat(task, nextTask, player);
+        status.sendProgressStatus(nextTask, player);
+        sendWaypoint(player, nextTask, 50);
         return;
       }
       if (dialogue.hasNext()) {
@@ -502,35 +492,46 @@ public class PlayerStatus implements IPlayerStatus {
         Bukkit.getScheduler().scheduleSyncDelayedTask(QuestWorld.getPlugin(),
             () -> sendDialogue(status, task, dialogue), 50L);
       } else {
-
+        IMission nextTask = getNextTask(task);
+        sendStatusToChat(task, nextTask, player);
+        status.sendProgressStatus(nextTask, player);
+        sendWaypoint(player, nextTask, 50);
         status.update();
-        sendThing(getNextTask(task), player);
       }
     });
   }
 
-  public static void notifyCompleted(IMission task, Player player) {
+  public static void sendStatusToChat(IMission task, IMission nextTask, Player player) {
     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
-    PlayerTools.sendTranslation(player, false,
-        Translation.NOTIFY_COMPLETED, task.getQuest().getName(), task.getText());
-  }
-
-  public static void sendProgressStatus(IMission task, Player player) {
-    if (task != null) {
-      String s = ChatColor.stripColor(task.getDisplayName());
-      MessageUtils.sendMessage(player, NEW_OBJ + s);
-      String notif = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + s;
-      if (task.getAmount() > 1 && task.getActionBarUpdates()) {
-        notif += " (0/" + task.getAmount() + ")";
-      }
-      StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
-
+    if (nextTask != null) {
+      player.sendMessage(UPDATED_OBJ + "The quest " + FaceColor.WHITE +
+          ChatColor.stripColor(task.getQuest().getName()) + FaceColor.YELLOW + " has been updated!");
+      player.sendMessage(NEW_OBJ + ChatColor.stripColor(nextTask.getDisplayName()));
+    } else {
+      player.sendMessage(COMPLETE_OBJ + ChatColor.stripColor(task.getQuest().getName()));
     }
   }
 
-  public static void setWaypoint(final Player p, IMission task, int delay) {
+  public void sendProgressStatus(IMission task, Player player) {
+    if (task != null && !hasCompletedTask(task)) {
+      String s = ChatColor.stripColor(task.getDisplayName());
+      String notif = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + s;
+      if (task.getAmount() == 1) {
+        StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
+      } else if (task.getActionBarUpdates()) {
+        notif += " (0/" + task.getAmount() + ")";
+        StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
+      }
+    }
+  }
+
+  public static void sendWaypoint(final Player p, IMission task, int delay) {
+    if (task == null || StringUtils.isBlank(task.getWaypointerId())) {
+      return;
+    }
     Bukkit.getScheduler().runTaskLater(QuestWorld.getPlugin(),
-        () -> updateQuestWaypoint(task, p), delay);
+        () -> WaypointerPlugin.getInstance().getWaypointManager()
+            .setWaypoint(p, task.getWaypointerId()), delay);
   }
 
   private static void sendDialogueComponent(Player player, String line) {
@@ -615,7 +616,8 @@ public class PlayerStatus implements IPlayerStatus {
           t.onSave();
         }
         // File name was not
-        catch (IllegalArgumentException ignored) {}
+        catch (IllegalArgumentException ignored) {
+        }
       }
 
       // Second: go back to the main thread and make sure all player managers know

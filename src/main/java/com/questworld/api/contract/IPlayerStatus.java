@@ -6,6 +6,7 @@ import com.questworld.api.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 @NoImpl
 public interface IPlayerStatus {
@@ -30,6 +31,8 @@ public interface IPlayerStatus {
 	double getProgress(IQuest quest);
 
 	int getProgress(ICategory category);
+
+	void sendProgressStatus(IMission task, Player player);
 
 	QuestStatus getStatus(IQuest quest);
 
