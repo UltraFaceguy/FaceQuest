@@ -13,10 +13,12 @@ import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ItemUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils.ToastStyle;
+import com.tealcube.minecraft.bukkit.facecore.utilities.UnicodeUtil;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.io.IOException;
@@ -513,9 +515,13 @@ class Quest extends UniqueObject implements IQuestState {
 
     QuestWorld.getSounds().QUEST_REWARD.playTo(p);
     if (questPoints > 0) {
+      ToastUtils.sendToast(p, FaceColor.NO_SHADOW +
+          UnicodeUtil.unicodePlacehold("<toast_questpoints>"), ItemUtils.BLANK, ToastStyle.INFO);
+      /*
       int total = QuestWorldPlugin.getAPI().getPlayerStatus(p).getQuestPoints() + questPoints;
       ToastUtils.sendToast(p, ChatColor.AQUA + "+" + questPoints + "QP!" + ChatColor.GRAY +
          " (" + total + " Total)", new ItemStack(Material.NETHER_STAR), ToastStyle.CHALLENGE);
+       */
     }
 
     ItemStack[] itemReward = rewards.toArray(new ItemStack[0]);

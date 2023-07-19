@@ -20,9 +20,11 @@ import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
 import com.questworld.util.TransientPermissionUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
-import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor.ShaderStyle;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ItemUtils;
 import com.tealcube.minecraft.bukkit.facecore.utilities.PaletteUtil;
 import com.tealcube.minecraft.bukkit.facecore.utilities.TitleUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.ToastUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.UnicodeUtil;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.ArrayList;
@@ -52,13 +54,13 @@ public class PlayerStatus implements IPlayerStatus {
   private final ProgressTracker tracker;
 
   private static final String UPDATED_PREFIX =
-      FaceColor.LIGHT_GREEN.shaded(ShaderStyle.OUTLINE) + "[Updated] ";
+      FaceColor.LIGHT_GREEN + "[Updated] ";
   private static final String UPDATED_OBJ = PaletteUtil.color(
-      "|lgreen_outline|Quest Updated! |yellow|");
+      "|lgreen|Quest Updated! |yellow|");
   private static final String COMPLETE_OBJ = PaletteUtil.color(
-      "|lgreen_outline|Quest Complete! |yellow|");
+      "|lgreen|Quest Complete! |yellow|");
   private static final String NEW_OBJ = PaletteUtil.color(
-      "|orange_outline|New Objective! |yellow|");
+      "|orange|New Objective! |yellow|");
 
   public PlayerStatus(UUID uuid) {
     this.playerUUID = uuid;
@@ -452,20 +454,23 @@ public class PlayerStatus implements IPlayerStatus {
     if (isMissionActive(task)) {
       String actionBar;
       String text = ChatColor.stripColor(task.getDisplayName());
-      actionBar = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + text;
-      if (task.getAmount() > 1) {
-        if (amount >= task.getAmount()) {
-          actionBar =
-              UPDATED_PREFIX + FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + ChatColor.stripColor(
-                  task.getQuest().getName());
-        } else {
-          if (task.getActionBarUpdates()) {
-            actionBar += " (" + amount + "/" + task.getAmount() + ")";
-          }
+      actionBar = FaceColor.CYAN + text;
+      if (amount >= task.getAmount()) {
+        actionBar = UPDATED_PREFIX + FaceColor.CYAN +
+            ChatColor.stripColor(task.getQuest().getName());
+        StrifePlugin.getInstance().getBossBarManager()
+            .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
+      } else if (task.getAmount() > 1) {
+        if (task.getActionBarUpdates()) {
+          actionBar += " (" + amount + "/" + task.getAmount() + ")";
+          StrifePlugin.getInstance().getBossBarManager()
+              .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
         }
+        // Do nothing if amount is greater than 1 and there's no updates set
+      } else {
+        StrifePlugin.getInstance().getBossBarManager()
+            .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
       }
-      StrifePlugin.getInstance().getBossBarManager()
-          .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
     }
     boolean complete = amount >= task.getAmount();
     if (complete) {
@@ -515,13 +520,8 @@ public class PlayerStatus implements IPlayerStatus {
   public void sendProgressStatus(IMission task, Player player) {
     if (task != null && !hasCompletedTask(task)) {
       String s = ChatColor.stripColor(task.getDisplayName());
-      String notif = FaceColor.CYAN.shaded(ShaderStyle.OUTLINE) + s;
-      if (task.getAmount() == 1) {
-        StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
-      } else if (task.getActionBarUpdates()) {
-        notif += " (0/" + task.getAmount() + ")";
-        StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
-      }
+      String notif = FaceColor.CYAN + s;
+      StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
     }
   }
 
@@ -554,6 +554,10 @@ public class PlayerStatus implements IPlayerStatus {
     if (quest.getRawCooldown() < 0) {
       tracker.setQuestStatus(quest, QuestStatus.FINISHED);
     } else {
+      if (Math.random() < 0.1) {
+        ToastUtils.sendToast((Player) getPlayer(), FaceColor.NO_SHADOW +
+            UnicodeUtil.unicodePlacehold("<toast_karma_up>"), ItemUtils.BLANK);
+      }
       if (quest.getRawCooldown() == 0) {
         tracker.setQuestStatus(quest, QuestStatus.AVAILABLE);
       } else {
