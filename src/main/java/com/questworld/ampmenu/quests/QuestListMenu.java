@@ -87,8 +87,6 @@ public class QuestListMenu extends ItemMenu {
 
   @Override
   public void open(Player player) {
-    IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
-    playerStatus.update();
     String title = switch (deluxeCategory) {
       case OPEN_QUESTS -> "New Quests";
       case UNFINISHED_QUESTS -> "Current Quests";
@@ -112,7 +110,6 @@ public class QuestListMenu extends ItemMenu {
 
   public void resort(Player player) {
     IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
-    playerStatus.update();
     sortedQuests.clear();
     sortedQuests.addAll(playerStatus.getQuests().get(deluxeCategory));
   }

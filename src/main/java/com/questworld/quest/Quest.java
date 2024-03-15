@@ -9,7 +9,6 @@ import com.questworld.api.contract.IQuest;
 import com.questworld.api.contract.IQuestState;
 import com.questworld.api.event.CancellableEvent;
 import com.questworld.api.event.QuestCompleteEvent;
-import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
@@ -33,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import land.face.strife.StrifePlugin;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -40,6 +40,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 class Quest extends UniqueObject implements IQuestState {
 
@@ -54,18 +55,24 @@ class Quest extends UniqueObject implements IQuestState {
   private long cooldown = -1;
   private int id = -1;
   private ItemStack item = new ItemStack(Material.WRITABLE_BOOK);
+  @Getter
   private int money = 0;
   private String name = "";
   private String rewardsLore = "";
   private boolean ordered = false;
   private WeakReference<Quest> parent = new WeakReference<>(null);
   private String permission = "";
-  private List<ItemStack> rewards = new ArrayList<>();
+  @Getter
+  private ItemStack[] rewards = new ItemStack[9];
   private Map<Integer, Mission> tasks = new HashMap<>(9);
   private List<String> world_blacklist = new ArrayList<>();
+  @Getter
   private int weight = 0;
+  @Getter
   private int levelRequirement = 0;
+  @Getter
   private int questPoints = 0;
+  @Getter
   private boolean hiddenUntilStarted = false;
   private double xp = 0;
 
@@ -89,8 +96,7 @@ class Quest extends UniqueObject implements IQuestState {
     commands.addAll(source.commands);
     world_blacklist.clear();
     world_blacklist.addAll(source.world_blacklist);
-    rewards.clear();
-    rewards.addAll(source.rewards);
+    rewards = source.rewards.clone();
 
     money = source.money;
     xp = source.xp;
@@ -253,6 +259,11 @@ class Quest extends UniqueObject implements IQuestState {
     config.set("quest-points", questPoints);
 
     config.set("rewards.items", rewards);
+    config.set("rewards.item-pick-1", rewards[4]);
+    config.set("rewards.item-pick-2", rewards[5]);
+    config.set("rewards.item-pick-3", rewards[6]);
+    config.set("rewards.item-pick-4", rewards[7]);
+    config.set("rewards.item-pick-5", rewards[8]);
 
     List<Map<String, Object>> missions = new ArrayList<>(tasks.size());
     for (Mission mission : getOrderedMissions()) {
@@ -299,34 +310,51 @@ class Quest extends UniqueObject implements IQuestState {
     return tasks.values();
   }
 
-  private List<ItemStack> loadRewards() {
+  private ItemStack[] loadRewards() {
     @SuppressWarnings("unchecked")
-    List<ItemStack> newItems = (List<ItemStack>) config.getList("rewards.items");
-
-    if (newItems != null) {
-      return newItems;
+    List<ItemStack> items = (List<ItemStack>) config.getList("rewards.items");
+    ItemStack[] rewards = new ItemStack[9];
+    if (items == null) {
+      return rewards;
+    }
+    int i = 0;
+    for (ItemStack item : items) {
+      if (i > 3) {
+        break;
+      }
+      rewards[i] = item;
+      i++;
     }
 
-    List<ItemStack> oldItems = new ArrayList<>();
-
-    ConfigurationSection rewards = config.getConfigurationSection("rewards.items");
-    if (rewards == null) {
-      return oldItems;
+    ItemStack pickOne = config.getItemStack("rewards.item-pick-1");
+    ItemStack pickTwo = config.getItemStack("rewards.item-pick-2");
+    ItemStack pickThree = config.getItemStack("rewards.item-pick-3");
+    ItemStack pickFour = config.getItemStack("rewards.item-pick-4");
+    ItemStack pickFive = config.getItemStack("rewards.item-pick-5");
+    if (pickOne != null) {
+      rewards[4] = pickOne;
     }
-
-    for (String key : rewards.getKeys(false)) {
-      oldItems.add(rewards.getItemStack(key));
+    if (pickOne != null) {
+      rewards[5] = pickTwo;
     }
-
-    return oldItems;
+    if (pickOne != null) {
+      rewards[6] = pickThree;
+    }
+    if (pickOne != null) {
+      rewards[7] = pickFour;
+    }
+    if (pickOne != null) {
+      rewards[8] = pickFive;
+    }
+    return rewards;
   }
 
   public void setItemRewards(Player p) {
-    rewards.clear();
-    for (int i = 0; i <= 4; i++) {
+    rewards = new ItemStack[9];
+    for (int i = 0; i <= 8; i++) {
       ItemStack item = p.getInventory().getItem(i);
       if (item != null && item.getType() != Material.AIR) {
-        rewards.add(item.clone());
+        rewards[i] = item.clone();
       }
     }
   }
@@ -361,10 +389,6 @@ class Quest extends UniqueObject implements IQuestState {
     this.name = name;
   }
 
-  public List<ItemStack> getRewards() {
-    return rewards;
-  }
-
   public Mission getMission(int i) {
     return tasks.get(i);
   }
@@ -397,16 +421,8 @@ class Quest extends UniqueObject implements IQuestState {
     this.cooldown = cooldown * COOLDOWN_SCALE;
   }
 
-  public int getMoney() {
-    return money;
-  }
-
   public double getXP() {
     return xp;
-  }
-
-  public int getWeight() {
-    return weight;
   }
 
   public int getModifiedWeight() {
@@ -422,10 +438,6 @@ class Quest extends UniqueObject implements IQuestState {
     return weight;
   }
 
-  public int getLevelRequirement() {
-    return levelRequirement;
-  }
-
   public int getModifiedLevelRequirement() {
     if (levelRequirement == 0) {
       int currReq = levelRequirement;
@@ -437,14 +449,6 @@ class Quest extends UniqueObject implements IQuestState {
       return currReq;
     }
     return levelRequirement;
-  }
-
-  public int getQuestPoints() {
-    return questPoints;
-  }
-
-  public boolean isHiddenUntilStarted() {
-    return hiddenUntilStarted;
   }
 
   public void setMoney(int money) {
@@ -472,9 +476,9 @@ class Quest extends UniqueObject implements IQuestState {
   }
 
   @Override
-  public boolean completeFor(Player p) {
+  public boolean completeFor(Player p, int selectedSlot) {
     if (CancellableEvent.send(new QuestCompleteEvent(getSource(), p))) {
-      handoutReward(p);
+      handoutReward(p, selectedSlot);
       QuestWorldPlugin.getAPI().getPlayerStatus(p).completeQuest(this);
       return true;
     }
@@ -497,7 +501,8 @@ class Quest extends UniqueObject implements IQuestState {
     if (xp > 0) {
       lore.add(FaceColor.LIGHT_GREEN.s() + FORMAT.format((int) xp) + " Combat XP");
     } else if (xp < 0) {
-      lore.add(FaceColor.LIGHT_GREEN.s() + FORMAT.format(getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp)) + " Combat XP");
+      lore.add(FaceColor.LIGHT_GREEN.s() + FORMAT.format(getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp))
+          + " Combat XP");
     }
     if (StringUtils.isNotBlank(rewardsLore)) {
       lore.addAll(TextUtils.color(Arrays.asList(rewardsLore.split("\\|"))));
@@ -511,48 +516,70 @@ class Quest extends UniqueObject implements IQuestState {
     return info;
   }
 
-  private void handoutReward(Player p) {
-
+  private void handoutReward(Player p, int selectedSlot) {
     QuestWorld.getSounds().QUEST_REWARD.playTo(p);
     if (questPoints > 0) {
       ToastUtils.sendToast(p, FaceColor.NO_SHADOW +
           UnicodeUtil.unicodePlacehold("<toast_questpoints>"), ItemUtils.BLANK, ToastStyle.INFO);
-      /*
-      int total = QuestWorldPlugin.getAPI().getPlayerStatus(p).getQuestPoints() + questPoints;
-      ToastUtils.sendToast(p, ChatColor.AQUA + "+" + questPoints + "QP!" + ChatColor.GRAY +
-         " (" + total + " Total)", new ItemStack(Material.NETHER_STAR), ToastStyle.CHALLENGE);
-       */
+    }
+    try {
+      List<ItemStack> stacks = new ArrayList<>();
+      ItemStack[] itemReward = rewards.clone();
+      // addItem can modify item stacks, apparently. We don't want that ever.
+      for (int i = 0; i < itemReward.length && i < 4; i++) {
+        if (itemReward[i] == null) {
+          continue;
+        }
+        stacks.add(ItemBuilder.clone(itemReward[i]));
+      }
+      if (selectedSlot > 0) {
+        if (itemReward[selectedSlot + 3] != null) {
+          stacks.add(ItemBuilder.clone(itemReward[selectedSlot + 3]));
+        }
+      }
+      for (ItemStack item : stacks) {
+        HashMap<Integer, ItemStack> remainder = p.getInventory().addItem(item);
+        if (!remainder.isEmpty()) {
+          for (ItemStack dropItem : remainder.values()) {
+            p.getWorld().dropItemNaturally(p.getLocation(), dropItem);
+          }
+        }
+      }
+      if (questPoints > 0) {
+        MessageUtils.sendMessage(p, "&f&lYou were awarded &b&l" + questPoints + " QuestPoints&f&l!");
+      }
+    } catch (Exception e) {
+      Bukkit.getLogger().severe("[FaceQuest] FAILED TO GIVE ITEMS FOR " + p.getName());
+      e.printStackTrace();
+    }
+    try {
+      if (money > 0) {
+        QuestWorld.getEconomy().ifPresent(economy -> economy.depositPlayer(p, money));
+        MessageUtils.sendMessage(p, "&e  +" + money + "◎");
+      }
+    } catch (Exception e) {
+      Bukkit.getLogger().severe("[FaceQuest] FAILED TO GIVE MONEY FOR " + p.getName());
+      e.printStackTrace();
+    }
+    try {
+      if (xp > 0) {
+        StrifePlugin.getInstance().getExperienceManager().addExperience(p, xp, true);
+      } else if (xp < 0) {
+        StrifePlugin.getInstance().getExperienceManager()
+            .addExperience(p, getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp), true);
+      }
+    } catch (Exception e) {
+      Bukkit.getLogger().severe("[FaceQuest] FAILED TO GIVE XP FOR " + p.getName());
+      e.printStackTrace();
     }
 
-    ItemStack[] itemReward = rewards.toArray(new ItemStack[0]);
-
-    // addItem can modify item stacks, apparently. We don't want that ever.
-    for (int i = 0; i < itemReward.length; ++i) {
-      itemReward[i] = ItemBuilder.clone(itemReward[i]);
-    }
-
-    for (ItemStack item : p.getInventory().addItem(itemReward).values()) {
-      p.getWorld().dropItemNaturally(p.getLocation(), item);
-    }
-
-    if (questPoints > 0) {
-      MessageUtils.sendMessage(p, "&f&lYou were awarded &b&l" + questPoints + " QuestPoints&f&l!");
-    }
-
-    if (money > 0) {
-      QuestWorld.getEconomy().ifPresent(economy -> economy.depositPlayer(p, money));
-      MessageUtils.sendMessage(p, "&e  +" + money + "◎");
-    }
-
-    if (xp > 0) {
-      StrifePlugin.getInstance().getExperienceManager().addExperience(p, xp, true);
-    } else if (xp < 0) {
-      StrifePlugin.getInstance().getExperienceManager()
-          .addExperience(p, getStrifeExpFromPercentage(getModifiedLevelRequirement(), xp), true);
-    }
-
-    for (String command : commands) {
-      Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replaceAll("@p", p.getName()));
+    try {
+      for (String command : commands) {
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replaceAll("@p", p.getName()));
+      }
+    } catch (Exception e) {
+      Bukkit.getLogger().severe("[FaceQuest] FAILED TO GIVE COMMANDS FOR " + p.getName());
+      e.printStackTrace();
     }
   }
 

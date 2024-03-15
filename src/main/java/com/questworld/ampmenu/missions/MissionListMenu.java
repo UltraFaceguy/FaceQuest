@@ -102,7 +102,6 @@ public class MissionListMenu extends ItemMenu {
   @Override
   public void open(Player player) {
     IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
-    playerStatus.update();
     setName(ChatColor.WHITE + "砳" + FaceColor.BLACK + FaceColor.BOLD.s() +
         ChatColor.stripColor(selectedQuest.getName()));
     super.open(player);
@@ -119,8 +118,6 @@ public class MissionListMenu extends ItemMenu {
   }
 
   public void resort(Player player) {
-    IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
-    playerStatus.update();
     sortedMissions.clear();
     sortedMissions.addAll(getSelectedQuest().getOrderedMissions());
   }

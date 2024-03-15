@@ -145,7 +145,6 @@ public class QuestMenu extends ItemMenu {
     List<String> lore;
 
     IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(player);
-    playerStatus.update();
 
     Map<DeluxeCategory, List<IQuest>> quests = playerStatus.getQuests();
 

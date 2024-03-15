@@ -16,56 +16,37 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.missions.status;
+package com.questworld.ampmenu.reward;
 
-import static com.questworld.QuestWorldPlugin.INT_FORMAT;
-
-import com.questworld.QuestWorldPlugin;
-import com.questworld.ampmenu.missions.MissionListMenu;
-import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
-import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
-import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
-import java.util.ArrayList;
-import java.util.List;
+import com.questworld.api.contract.IQuest;
+import java.util.Map;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
-import org.bukkit.ChatColor;
+import ninja.amp.ampmenus.menus.ItemMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-public class LootDisplay extends MenuItem {
+public class RewardIcon extends MenuItem {
 
-  private final MissionListMenu menu;
+  private final ItemMenu menu;
+  private final Map<Player, IQuest> parentQuestMap;
+  private final int slot;
 
-  public LootDisplay(MissionListMenu menu) {
+  public RewardIcon(ItemMenu menu, Map<Player, IQuest> parentQuestMap, int slot) {
     super("", new ItemStack(Material.TOTEM_OF_UNDYING));
     this.menu = menu;
+    this.parentQuestMap = parentQuestMap;
+    this.slot = slot;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    int money = menu.getSelectedQuest().getMoney();
-    int items = QuestWorldPlugin.countRewards(menu.getSelectedQuest());
-    if (money < 1 && items == 0) {
+    IQuest quest = parentQuestMap.get(player);
+    if (quest.getRewards()[slot] == null) {
       return new ItemStack(Material.AIR);
     }
-
-    ItemStack stack = new ItemStack(Material.PAPER);
-    ItemStackExtensionsKt.setCustomModelData(stack, 1011);
-      ItemStackExtensionsKt.setDisplayName(stack, FaceColor.ORANGE + FaceColor.BOLD.s() +
-        "Loot Rewards");
-
-    List<String> lore = new ArrayList<>();
-    lore.add("");
-    if (items > 0) {
-      lore.add(FaceColor.WHITE.s() + items + " Items");
-    }
-    if (money > 0) {
-      lore.add(FaceColor.YELLOW.s() + INT_FORMAT.format(money) + ChatColor.YELLOW + "◎");
-    }
-    TextUtils.setLore(stack, lore, false);
-    return stack;
+    return quest.getRewards()[slot];
   }
 
   @Override

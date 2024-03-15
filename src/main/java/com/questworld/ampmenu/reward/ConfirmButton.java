@@ -16,56 +16,38 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.questworld.ampmenu.missions.status;
-
-import static com.questworld.QuestWorldPlugin.INT_FORMAT;
+package com.questworld.ampmenu.reward;
 
 import com.questworld.QuestWorldPlugin;
-import com.questworld.ampmenu.missions.MissionListMenu;
+import com.questworld.api.contract.IQuest;
 import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
-import com.tealcube.minecraft.bukkit.facecore.utilities.TextUtils;
+import com.tealcube.minecraft.bukkit.facecore.utilities.MessageUtils;
 import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
-import org.bukkit.ChatColor;
+import ninja.amp.ampmenus.menus.ItemMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 
-public class LootDisplay extends MenuItem {
+public class ConfirmButton extends MenuItem {
 
-  private final MissionListMenu menu;
+  private final Map<Player, IQuest> parentQuestMap;
+  private final int selectionId;
 
-  public LootDisplay(MissionListMenu menu) {
-    super("", new ItemStack(Material.TOTEM_OF_UNDYING));
-    this.menu = menu;
+  public ConfirmButton(Map<Player, IQuest> parentQuestMap, int selectionId) {
+    super("", new ItemStack(Material.BARRIER));
+    ItemStackExtensionsKt.setCustomModelData(getIcon(), 50);
+    ItemStackExtensionsKt.setDisplayName(getIcon(), FaceColor.GREEN + "Collect Rewards!");
+    this.parentQuestMap = parentQuestMap;
+    this.selectionId = selectionId;
   }
 
   @Override
   public ItemStack getFinalIcon(Player player) {
-    int money = menu.getSelectedQuest().getMoney();
-    int items = QuestWorldPlugin.countRewards(menu.getSelectedQuest());
-    if (money < 1 && items == 0) {
-      return new ItemStack(Material.AIR);
-    }
-
-    ItemStack stack = new ItemStack(Material.PAPER);
-    ItemStackExtensionsKt.setCustomModelData(stack, 1011);
-      ItemStackExtensionsKt.setDisplayName(stack, FaceColor.ORANGE + FaceColor.BOLD.s() +
-        "Loot Rewards");
-
-    List<String> lore = new ArrayList<>();
-    lore.add("");
-    if (items > 0) {
-      lore.add(FaceColor.WHITE.s() + items + " Items");
-    }
-    if (money > 0) {
-      lore.add(FaceColor.YELLOW.s() + INT_FORMAT.format(money) + ChatColor.YELLOW + "◎");
-    }
-    TextUtils.setLore(stack, lore, false);
-    return stack;
+    return getIcon();
   }
 
   @Override
@@ -73,5 +55,32 @@ public class LootDisplay extends MenuItem {
     super.onItemClick(event);
     event.setWillClose(false);
     event.setWillUpdate(false);
+    if (selectionId == 0) {
+      MessageUtils.sendMessage(event.getPlayer(), "&e[!] Select a reward first!");
+      return;
+    }
+    event.setWillClose(true);
+    execute(parentQuestMap.get(event.getPlayer()), event.getPlayer());
+  }
+
+  public void execute(IQuest quest, Player player) {
+    if (getEmptySlots(player) < QuestWorldPlugin.countRewards(quest)) {
+      MessageUtils.sendMessage(player,
+          "&e[!] You do not have enough inventory space to accept this reward. Clear some space, then check this quest in &f/quests &eto claim.");
+      return;
+    }
+    quest.completeFor(player, selectionId);
+  }
+
+  public static int getEmptySlots(Player p) {
+    PlayerInventory inventory = p.getInventory();
+    ItemStack[] cont = inventory.getContents();
+    int i = 0;
+    for (ItemStack item : cont) {
+      if (item == null || item.getType() == Material.AIR) {
+        i++;
+      }
+    }
+    return i;
   }
 }

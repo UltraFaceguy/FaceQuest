@@ -114,7 +114,6 @@ public class QuestBook {
   public static void openMainMenu(Player p) {
     QuestWorld.getSounds().QUEST_CLICK.playTo(p);
     IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(p);
-    playerStatus.update();
 
     Menu menu = new Menu(1, QuestWorld.translate(p, Translation.gui_title));
 
@@ -190,7 +189,6 @@ public class QuestBook {
   public static void openCategory(Player p, ICategory category, final boolean back) {
     QuestWorld.getSounds().QUEST_CLICK.playTo(p);
     IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(p);
-    playerStatus.update();
 
     setLastViewed(p, category, back);
 
@@ -278,7 +276,6 @@ public class QuestBook {
       final boolean back) {
     QuestWorld.getSounds().QUEST_CLICK.playTo(p);
     IPlayerStatus manager = QuestWorld.getPlayerStatus(p);
-    manager.update();
 
     setLastViewed(p, quest, categoryBack, back);
 
@@ -335,7 +332,6 @@ public class QuestBook {
           .wrapText(QuestWorld.translate(p, Translation.quests_display_monetary), "",
               "&6$" + quest.getMoney())
           .get(), null, false);
-      rewardIndex++;
     }
 
     ItemStack glassLocked = new ItemBuilder(Material.RED_STAINED_GLASS_PANE)
@@ -394,7 +390,7 @@ public class QuestBook {
     for (int i = 0; i < 9; i++) {
       if (manager.getStatus(quest).equals(QuestStatus.REWARD_CLAIMABLE)) {
         menu.put(i + offset, glassClaimable, event -> {
-          quest.completeFor(p);
+          quest.completeFor(p, -1);
           // TODO QuestWorld.getSounds().muteNext();
           PagedMapping.putPage(p, view.getCurrentPage());
           openQuest(p, quest, categoryBack, back);

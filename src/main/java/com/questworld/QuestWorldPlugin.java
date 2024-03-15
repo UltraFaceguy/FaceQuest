@@ -3,6 +3,8 @@ package com.questworld;
 import com.questworld.ampmenu.main.QuestMenu;
 import com.questworld.ampmenu.missions.MissionListMenu;
 import com.questworld.ampmenu.quests.QuestListMenu;
+import com.questworld.ampmenu.reward.RewardMenu;
+import com.questworld.ampmenu.reward.RewardPickerMenu;
 import com.questworld.api.contract.ICategory;
 import com.questworld.api.contract.IPlayerStatus.DeluxeCategory;
 import com.questworld.api.contract.IQuest;
@@ -24,6 +26,7 @@ import java.util.WeakHashMap;
 import land.face.potions.PotionPlugin;
 import land.face.potions.data.Potion;
 import lombok.Getter;
+import lombok.Setter;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -36,11 +39,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
   private static QuestWorldPlugin _INSTANCE;
+  public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###");
+
   private QuestingImpl api;
   private static Permission perms = null;
 
   private int autosaveHandle = -1;
   private int questCheckHandle = -1;
+  private int questCheckHandleCooldown = -1;
 
   private SpawnerListener spawnListener;
 
@@ -49,7 +55,11 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
   private final Map<Player, QuestListMenu> questListMenus = new WeakHashMap<>();
   private final Map<Player, MissionListMenu> missionListMenus = new WeakHashMap<>();
 
-  public static final DecimalFormat INT_FORMAT = new DecimalFormat("###,###,###");
+  @Getter
+  private RewardMenu rewardMenu;
+  @Getter
+  private RewardPickerMenu noSelectionPicker, selectionPickerOne, selectionPickerTwo, selectionPickerThree,
+      selectionPickerFour, selectionPickerFive;
 
   public static QuestWorldPlugin get() {
     return _INSTANCE;
@@ -100,6 +110,15 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
     questMenu = new QuestMenu(this);
 
+    rewardMenu = new RewardMenu(this);
+
+    noSelectionPicker = new RewardPickerMenu(this, 0);
+    selectionPickerOne = new RewardPickerMenu(this, 1);
+    selectionPickerTwo = new RewardPickerMenu(this, 2);
+    selectionPickerThree = new RewardPickerMenu(this, 3);
+    selectionPickerFour = new RewardPickerMenu(this, 4);
+    selectionPickerFive = new RewardPickerMenu(this, 5);
+
     Bukkit.getScheduler().runTaskLater(this, () -> {
       long current = System.currentTimeMillis();
       Bukkit.getLogger().info("[FaceQuest] Running Loot updateItem pass...");
@@ -124,18 +143,59 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     }, 1200);
   }
 
+  public void openNewPicker(Player player, IQuest quest) {
+    if (quest.getRewards()[4] != null || quest.getRewards()[5] != null || quest.getRewards()[6] != null ||
+        quest.getRewards()[7] != null || quest.getRewards()[8] != null) {
+      noSelectionPicker.setQuest(player, quest);
+      noSelectionPicker.open(player);
+    } else {
+      rewardMenu.setQuest(player, quest);
+      rewardMenu.open(player);
+    }
+  }
+
+  public static int countRewards(IQuest quest) {
+    int amount = 0;
+    if (quest.getRewards()[0] != null) {
+      amount++;
+    }
+    if (quest.getRewards()[1] != null) {
+      amount++;
+    }
+    if (quest.getRewards()[2] != null) {
+      amount++;
+    }
+    if (quest.getRewards()[3] != null) {
+      amount++;
+    }
+    if (quest.getRewards()[4] != null || quest.getRewards()[5] != null || quest.getRewards()[6] != null ||
+        quest.getRewards()[7] != null || quest.getRewards()[8] != null) {
+      amount++;
+    }
+    return amount;
+  }
+
   public void loadConfigs() {
     reloadConfig();
 
     if (questCheckHandle != -1) {
       getServer().getScheduler().cancelTask(questCheckHandle);
     }
+    if (questCheckHandleCooldown != -1) {
+      getServer().getScheduler().cancelTask(questCheckHandleCooldown);
+    }
 
+    int questCheckDelay = getConfig().getInt("options.quest-check-delay");
     questCheckHandle = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
       for (Player p : getServer().getOnlinePlayers()) {
-        api.getPlayerStatus(p).update(true);
+        api.getPlayerStatus(p).updateTicking(p);
       }
-    }, 0L, getConfig().getInt("options.quest-check-delay"));
+    }, 0L, questCheckDelay);
+    questCheckHandleCooldown = getServer().getScheduler().scheduleSyncRepeatingTask(this, () -> {
+      for (Player p : getServer().getOnlinePlayers()) {
+        api.getPlayerStatus(p).updateCooldowns();
+      }
+    }, questCheckDelay / 2, questCheckDelay);
 
     int autosave = getConfig().getInt("options.autosave-interval") * 20 * 60; // minutes to ticks
 
@@ -162,6 +222,7 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
 
     autosaveHandle = -1;
     questCheckHandle = -1;
+    questCheckHandleCooldown = -1;
 
     Log.setLogger(null);
 

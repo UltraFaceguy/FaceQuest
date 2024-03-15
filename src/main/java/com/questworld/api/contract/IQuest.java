@@ -22,7 +22,7 @@ public interface IQuest extends DataObject {
 
 	ICategory getCategory();
 
-	List<ItemStack> getRewards();
+	ItemStack[] getRewards();
 
 	IMission getMission(int i);
 
@@ -54,7 +54,7 @@ public interface IQuest extends DataObject {
 
 	String getRewardsLore();
 
-	boolean completeFor(Player p);
+	boolean completeFor(Player p, int selectedSlot);
 
 	IQuestState getState();
 

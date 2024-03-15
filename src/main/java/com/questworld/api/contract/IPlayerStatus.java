@@ -44,7 +44,11 @@ public interface IPlayerStatus {
 
 	boolean hasUnlockedTask(IMission mission);
 
-	void update();
+	void checkComplete(IQuest quest, Player p);
+
+	void updateTicking(Player p);
+
+	void updateCooldowns();
 
 	enum DeluxeCategory {
 		OPEN_QUESTS,

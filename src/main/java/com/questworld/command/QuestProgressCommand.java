@@ -28,8 +28,6 @@ public class QuestProgressCommand implements CommandExecutor {
 			MessageUtils.sendMessage(sender, "/q-external <player> <missionId> [amount]");
 			return false;
 		}
-    System.out.println(args[0]);
-    System.out.println(args[1]);
     Player player = Bukkit.getPlayer(args[0]);
     String id = args[1];
     int amount = 1;
@@ -46,7 +44,6 @@ public class QuestProgressCommand implements CommandExecutor {
       if (r.getMission().getCustomString() == null) {
         continue;
       }
-      System.out.println(r.getMission().getCustomString());
       if (r.getMission().getCustomString().equals(id)) {
         r.addProgress(amount);
       }

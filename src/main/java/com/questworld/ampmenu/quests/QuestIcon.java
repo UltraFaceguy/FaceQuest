@@ -1,20 +1,18 @@
 /**
  * The MIT License Copyright (c) 2015 Teal Cube Games
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
- * associated documentation files (the "Software"), to deal in the Software without restriction,
- * including without limitation the rights to use, copy, modify, merge, publish, distribute,
- * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or
- * substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
- * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
+ * Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+ * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+ * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 package com.questworld.ampmenu.quests;
 
@@ -25,10 +23,10 @@ import com.questworld.api.Translation;
 import com.questworld.api.contract.IMission;
 import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IQuest;
-import com.questworld.api.menu.RewardsPrompt;
 import com.questworld.manager.PlayerStatus;
 import com.questworld.util.ItemBuilder;
 import com.questworld.util.Text;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
 import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
@@ -90,10 +88,14 @@ public class QuestIcon extends MenuItem {
     }
     String progressNum = Text.progressString((int) completedMissions, maxMissions);
 
+    int questLevel = quest.getModifiedLevelRequirement();
     ItemBuilder builder = new ItemBuilder(quest.getItem());
+    String questLvlStr = questLevel > 0 ?
+        FaceColor.WHITE + "Quest Level: " + questLevel : FaceColor.YELLOW + "Achievement Quest";
     if (StringUtils.isBlank(waypointerId)) {
       return builder.wrapText(
           quest.getName(),
+          questLvlStr,
           "",
           statusString,
           progressNum
@@ -101,6 +103,7 @@ public class QuestIcon extends MenuItem {
     } else {
       return builder.wrapText(
           quest.getName(),
+          questLvlStr,
           "",
           statusString,
           progressNum,
@@ -122,10 +125,9 @@ public class QuestIcon extends MenuItem {
       IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());
       QuestStatus questStatus = playerStatus.getStatus(currentQuest);
       if (questStatus == QuestStatus.REWARD_CLAIMABLE) {
-        new RewardsPrompt(currentQuest, event.getPlayer());
+        QuestWorldPlugin.get().openNewPicker(event.getPlayer(), currentQuest);
       } else {
-        QuestWorldPlugin.get().openMissionList(event.getPlayer(),
-            menu.getDeluxeCategory(), currentQuest);
+        QuestWorldPlugin.get().openMissionList(event.getPlayer(), menu.getDeluxeCategory(), currentQuest);
       }
     } else if (event.getClickType() == ClickType.RIGHT || event.getClickType() == ClickType.SHIFT_RIGHT) {
       IPlayerStatus playerStatus = QuestWorld.getPlayerStatus(event.getPlayer());

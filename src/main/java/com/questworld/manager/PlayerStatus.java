@@ -1,6 +1,7 @@
 package com.questworld.manager;
 
 import com.questworld.Directories;
+import com.questworld.QuestWorldPlugin;
 import com.questworld.QuestingImpl;
 import com.questworld.api.MissionType;
 import com.questworld.api.QuestStatus;
@@ -14,7 +15,6 @@ import com.questworld.api.contract.IPlayerStatus;
 import com.questworld.api.contract.IQuest;
 import com.questworld.api.event.MissionCompletedEvent;
 import com.questworld.api.menu.LinkedMenu;
-import com.questworld.api.menu.RewardsPrompt;
 import com.questworld.quest.WeightComparator;
 import com.questworld.util.PlayerTools;
 import com.questworld.util.Text;
@@ -29,14 +29,19 @@ import com.tealcube.minecraft.bukkit.shade.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import land.face.strife.StrifePlugin;
+import land.face.strife.managers.BossBarManager;
 import land.face.waypointer.WaypointerPlugin;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -58,9 +63,12 @@ public class PlayerStatus implements IPlayerStatus {
   private static final String UPDATED_OBJ = PaletteUtil.color(
       "|lgreen|Quest Updated! |yellow|");
   private static final String COMPLETE_OBJ = PaletteUtil.color(
-      "|lgreen|Quest Complete! |yellow|");
+      "|lgreen|Quest Updated Complete! |yellow|");
   private static final String NEW_OBJ = PaletteUtil.color(
       "|orange|New Objective! |yellow|");
+
+  private static final Set<IQuest> CD_QUESTS = new HashSet<>();
+  private static long CD_STAMP = System.currentTimeMillis();
 
   public PlayerStatus(UUID uuid) {
     this.playerUUID = uuid;
@@ -232,7 +240,6 @@ public class PlayerStatus implements IPlayerStatus {
     if (task.getTimeframe() == 0) {
       return true;
     }
-
     if (!isWithinTimeframe(task)) {
       tracker.setMissionEnd(task, null);
       tracker.setMissionProgress(task, 0);
@@ -283,58 +290,85 @@ public class PlayerStatus implements IPlayerStatus {
   }
 
   @Override
-  public void update() {
-    update(false);
-  }
-
-  public void update(boolean quest_check) {
-
-    Player p = asOnline(playerUUID);
-
+  public void updateTicking(Player player) {
     if (inDialogue) {
       return;
     }
-
-    if (quest_check) {
-      for (IMission mission : QuestWorld.getViewer().getTickingMissions()) {
-        if (isMissionActive(mission)) {
-          ((Ticking) mission.getType()).onTick(p, new MissionSet.Result(mission, this));
-        }
+    Set<IQuest> tickingQuests = new HashSet<>();
+    for (IMission mission : QuestWorld.getViewer().getTickingMissions()) {
+      if (isMissionActive(mission)) {
+        ((Ticking) mission.getType()).onTick(player, new MissionSet.Result(mission, this));
+        tickingQuests.add(mission.getQuest());
       }
     }
+    for (IQuest quest : tickingQuests) {
+      checkComplete(quest, player);
+    }
+  }
 
-    for (ICategory category : QuestWorld.getFacade().getCategories()) {
-      for (IQuest quest : category.getQuests()) {
-        if (quest.isEnabled() && getStatus(quest).equals(QuestStatus.AVAILABLE)) {
-          boolean finished = quest.getMissions().size() != 0;
-          for (IMission task : quest.getMissions()) {
-            updateTimeframe(task, 0);
-            if (!hasCompletedTask(task)) {
-              finished = false;
-            }
-          }
-
-          if (finished) {
-            TitleUtils.sendTitle(p,
-                PaletteUtil.color("|yellow_bounce|QUEST COMPLETE!"),
-                PaletteUtil.color("|orange_wave|Completed: |white_wave|" + ChatColor.stripColor(quest.getName())));
-            p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
-            tracker.setQuestFinished(quest, true);
-            if (!quest.getAutoClaimed()) {
-              tracker.setQuestStatus(quest, QuestStatus.REWARD_CLAIMABLE);
-              new RewardsPrompt(quest, p);
-            } else {
-              quest.completeFor(p);
-            }
-          }
-        } else if (getStatus(quest).equals(QuestStatus.ON_COOLDOWN)) {
-          if (tracker.getQuestRefresh(quest) <= System.currentTimeMillis()) {
-            tracker.setQuestStatus(quest, QuestStatus.AVAILABLE);
-          }
+  @Override
+  public void updateCooldowns() {
+    cacheCooldownQuests();
+    for (IQuest quest : CD_QUESTS) {
+      if (getStatus(quest).equals(QuestStatus.ON_COOLDOWN)) {
+        if (tracker.getQuestRefresh(quest) <= System.currentTimeMillis()) {
+          tracker.setQuestStatus(quest, QuestStatus.AVAILABLE);
         }
       }
     }
   }
+
+  private void cacheCooldownQuests() {
+    if (System.currentTimeMillis() < CD_STAMP) {
+      return;
+    }
+    CD_QUESTS.clear();
+    for (ICategory c : QuestWorld.getAPI().getFacade().getCategories()) {
+      for (IQuest q : c.getQuests()) {
+        if (!q.isEnabled() || q.getCooldown() < 0) {
+          continue;
+        }
+        CD_QUESTS.add(q);
+      }
+    }
+    CD_STAMP = System.currentTimeMillis() + 1000 * 60;
+  }
+
+  @Override
+  public void checkComplete(IQuest quest, Player p) {
+    if (!p.isOnline() || !quest.isEnabled() || !getStatus(quest).equals(QuestStatus.AVAILABLE)) {
+      return;
+    }
+    if (quest.getMissions().isEmpty()) {
+      return;
+    }
+    for (IMission task : quest.getMissions()) {
+      if (!hasCompletedTask(task)) {
+        return;
+      }
+    }
+    Bukkit.getScheduler().runTaskLater(QuestWorldPlugin.get(), () -> {
+      if (getStatus(quest) != QuestStatus.AVAILABLE) {
+        return;
+      }
+      TitleUtils.sendTitle(p,
+          PaletteUtil.color("|yellow_bounce|QUEST COMPLETE!"),
+          PaletteUtil.color("|orange_wave|Completed: |white_wave|" + ChatColor.stripColor(quest.getName())));
+      p.playSound(p.getLocation(), Sound.ITEM_BOOK_PAGE_TURN, 1, 1);
+      tracker.setQuestFinished(quest, true);
+      if (!quest.getAutoClaimed()) {
+        tracker.setQuestStatus(quest, QuestStatus.REWARD_CLAIMABLE);
+        QuestWorldPlugin.get().openNewPicker(p, quest);
+      } else {
+        quest.completeFor(p, -1);
+      }
+      // TODO: I have no idea what this does
+      for (IMission task : quest.getMissions()) {
+        updateTimeframe(task, 0);
+      }
+    }, 4L);
+  }
+
 
   @Override
   public QuestStatus getStatus(IQuest quest) {
@@ -456,27 +490,28 @@ public class PlayerStatus implements IPlayerStatus {
       String text = ChatColor.stripColor(task.getDisplayName());
       actionBar = FaceColor.CYAN + text;
       if (amount >= task.getAmount()) {
-        actionBar = UPDATED_PREFIX + FaceColor.CYAN +
-            ChatColor.stripColor(task.getQuest().getName());
-        StrifePlugin.getInstance().getBossBarManager()
-            .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
+        actionBar = UPDATED_PREFIX + FaceColor.CYAN + ChatColor.stripColor(task.getQuest().getName());
+        TextComponent tc = BossBarManager.covertStringToRetardComponent(actionBar);
+        StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, tc, 300);
       } else if (task.getAmount() > 1) {
         if (task.getActionBarUpdates()) {
           actionBar += " (" + amount + "/" + task.getAmount() + ")";
-          StrifePlugin.getInstance().getBossBarManager()
-              .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
+          TextComponent tc = BossBarManager.covertStringToRetardComponent(actionBar);
+          StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, tc, 300);
         }
         // Do nothing if amount is greater than 1 and there's no updates set
       } else {
-        StrifePlugin.getInstance().getBossBarManager()
-            .updateBar((Player) getPlayer(), 4, 0, actionBar, 300);
+        TextComponent tc = BossBarManager.covertStringToRetardComponent(actionBar);
+        StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, tc, 300);
       }
     }
     boolean complete = amount >= task.getAmount();
     if (complete) {
       Bukkit.getPluginManager().callEvent(new MissionCompletedEvent(task));
       sendDialogue(this, task, task.getDialogue().iterator());
+      checkComplete(task.getQuest(), asOnline(playerUUID));
     }
+
     TransientPermissionUtil.updateTransientPerms(getPlayer(), this, task.getQuest());
   }
 
@@ -501,19 +536,17 @@ public class PlayerStatus implements IPlayerStatus {
         sendStatusToChat(task, nextTask, player);
         status.sendProgressStatus(nextTask, player);
         sendWaypoint(player, nextTask, 50);
-        status.update();
+        status.checkComplete(task.getQuest(), player);
       }
     });
   }
 
   public static void sendStatusToChat(IMission task, IMission nextTask, Player player) {
     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1, 1);
+    player.sendMessage(UPDATED_OBJ + FaceColor.WHITE +
+        ChatColor.stripColor(task.getQuest().getName()) + FaceColor.YELLOW + " has been updated!");
     if (nextTask != null) {
-      player.sendMessage(UPDATED_OBJ + "The quest " + FaceColor.WHITE +
-          ChatColor.stripColor(task.getQuest().getName()) + FaceColor.YELLOW + " has been updated!");
       player.sendMessage(NEW_OBJ + ChatColor.stripColor(nextTask.getDisplayName()));
-    } else {
-      player.sendMessage(COMPLETE_OBJ + ChatColor.stripColor(task.getQuest().getName()));
     }
   }
 
@@ -521,7 +554,8 @@ public class PlayerStatus implements IPlayerStatus {
     if (task != null && !hasCompletedTask(task)) {
       String s = ChatColor.stripColor(task.getDisplayName());
       String notif = FaceColor.CYAN + s;
-      StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, notif, 1200);
+      TextComponent tc = BossBarManager.covertStringToRetardComponent(notif);
+      StrifePlugin.getInstance().getBossBarManager().updateBar(player, 4, 0, tc, 1200);
     }
   }
 
@@ -570,7 +604,7 @@ public class PlayerStatus implements IPlayerStatus {
       }
     }
     // CLEAR QUEST BAR
-    StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, "", 2);
+    StrifePlugin.getInstance().getBossBarManager().updateBar((Player) getPlayer(), 4, 0, Component.empty(), 2);
     updateQuestPoints();
     TransientPermissionUtil.updateTransientPerms(getPlayer(), this, quest);
   }
