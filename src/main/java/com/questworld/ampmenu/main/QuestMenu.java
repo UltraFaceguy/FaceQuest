@@ -206,7 +206,7 @@ public class QuestMenu extends ItemMenu {
 
     List<String> lore = PaletteUtil.color(List.of(
         "",
-        "|lgray|View |cyan||b|NEW |white|and |cyan||b|AVAILABLE|lgray| quests!",
+        "|lgray|View |cyan||b|NEW |lgray|and |cyan||b|AVAILABLE|lgray| quests!",
         "",
         "|lgray|Pick one and head out to explore the",
         "|lgray|world!"

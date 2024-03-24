@@ -46,8 +46,8 @@ public class LootDisplay extends MenuItem {
   @Override
   public ItemStack getFinalIcon(Player player) {
     int money = menu.getSelectedQuest().getMoney();
-    int items = QuestWorldPlugin.countRewards(menu.getSelectedQuest());
-    if (money < 1 && items == 0) {
+    List<String> itemLines = QuestWorldPlugin.rewardLines(menu.getSelectedQuest());
+    if (money < 1 && itemLines.isEmpty()) {
       return new ItemStack(Material.AIR);
     }
 
@@ -58,8 +58,8 @@ public class LootDisplay extends MenuItem {
 
     List<String> lore = new ArrayList<>();
     lore.add("");
-    if (items > 0) {
-      lore.add(FaceColor.WHITE.s() + items + " Items");
+    if (!itemLines.isEmpty()) {
+      lore.addAll(itemLines);
     }
     if (money > 0) {
       lore.add(FaceColor.YELLOW.s() + INT_FORMAT.format(money) + ChatColor.YELLOW + "◎");

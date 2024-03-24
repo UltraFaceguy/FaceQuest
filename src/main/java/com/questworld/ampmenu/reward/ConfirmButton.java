@@ -26,7 +26,6 @@ import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.util.Map;
 import ninja.amp.ampmenus.events.ItemClickEvent;
 import ninja.amp.ampmenus.items.MenuItem;
-import ninja.amp.ampmenus.menus.ItemMenu;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -64,7 +63,7 @@ public class ConfirmButton extends MenuItem {
   }
 
   public void execute(IQuest quest, Player player) {
-    if (getEmptySlots(player) < QuestWorldPlugin.countRewards(quest)) {
+    if (getEmptySlots(player) < QuestWorldPlugin.rewardLines(quest).size()) {
       MessageUtils.sendMessage(player,
           "&e[!] You do not have enough inventory space to accept this reward. Clear some space, then check this quest in &f/quests &eto claim.");
       return;

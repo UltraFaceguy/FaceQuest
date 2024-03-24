@@ -19,14 +19,17 @@ import com.questworld.listener.PlayerListener;
 import com.questworld.listener.SpawnerListener;
 import com.questworld.util.Log;
 import com.questworld.util.TransientPermissionUtil;
+import com.tealcube.minecraft.bukkit.facecore.utilities.FaceColor;
 import info.faceland.loot.utils.MaterialUtil;
+import io.pixeloutlaw.minecraft.spigot.hilt.ItemStackExtensionsKt;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import land.face.potions.PotionPlugin;
 import land.face.potions.data.Potion;
 import lombok.Getter;
-import lombok.Setter;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -154,25 +157,29 @@ public class QuestWorldPlugin extends JavaPlugin implements Listener {
     }
   }
 
-  public static int countRewards(IQuest quest) {
-    int amount = 0;
+  public static List<String> rewardLines(IQuest quest) {
+    List<String> lines = new ArrayList<>();
     if (quest.getRewards()[0] != null) {
-      amount++;
+      ItemStack stack = quest.getRewards()[0];
+      lines.add(FaceColor.WHITE.s() + stack.getAmount() + "x " + ItemStackExtensionsKt.getDisplayName(stack));
     }
     if (quest.getRewards()[1] != null) {
-      amount++;
+      ItemStack stack = quest.getRewards()[1];
+      lines.add(FaceColor.WHITE.s() + stack.getAmount() + "x " + ItemStackExtensionsKt.getDisplayName(stack));
     }
     if (quest.getRewards()[2] != null) {
-      amount++;
+      ItemStack stack = quest.getRewards()[2];
+      lines.add(FaceColor.WHITE.s() + stack.getAmount() + "x " + ItemStackExtensionsKt.getDisplayName(stack));
     }
     if (quest.getRewards()[3] != null) {
-      amount++;
+      ItemStack stack = quest.getRewards()[3];
+      lines.add(FaceColor.WHITE.s() + stack.getAmount() + "x " + ItemStackExtensionsKt.getDisplayName(stack));
     }
     if (quest.getRewards()[4] != null || quest.getRewards()[5] != null || quest.getRewards()[6] != null ||
         quest.getRewards()[7] != null || quest.getRewards()[8] != null) {
-      amount++;
+      lines.add(FaceColor.ORANGE + "[ A Choice of Items ]");
     }
-    return amount;
+    return lines;
   }
 
   public void loadConfigs() {
